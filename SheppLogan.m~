@@ -1,0 +1,22 @@
+  classdef SheppLogan < ChiDist
+    properties
+       
+    end
+    methods
+       function obj = SheppLogan( numVox, sus )
+          % Method SheppLogan (constructor)
+          % - Call superclass constructor.
+          obj = obj@ChiDist( numVox, 'Shepp-Logan' ) ;
+          % - Define SheppLogan specific properties.
+          obj.sus = sus ;
+       end
+       
+    function obj = shepp_logan(obj, numVox)       
+        % Create a 3D Shepp_Logan volume for the 
+        % dims: [x, y, z] number of voxels.
+        obj.volume = phantom3d(numVox); 
+
+        obj.volume = obj.customize_shepp_logan(obj.volume, obj.sus.chi1, obj.sus.chi2, obj.sus.chi3, obj.sus.chi4);
+        end
+    end
+ end

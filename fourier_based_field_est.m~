@@ -16,9 +16,11 @@ function Bdz = fourier_based_field_est(chiDist_fname)
 % distribution
 %
 % OUPUTS
-% nifti file containing Bdz, the magnetic field offset due to the
-% susceptibility distribution found in 'chiDist_fname'
+% nifti file cont
+% Bdz = magnetic field offset due to the sphere (relative to B0)
 %
+% AUTHOR: Eva Alonso Ortiz, PhD (eva.alonso.ortiz@gmail.com)
+% DATE LAST MODIFIED: April 2020
 %
 %*************************************************************************
 
