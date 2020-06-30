@@ -7,6 +7,9 @@ REFERENCES: J.P. MARQUES, R. BOWTELL Concepts in Magnetic Resonance Part B (Magn
 Example usage:
 
 To generate a susceptibility distribution with the shape of cylinder:
+
 my_sus_dist = Cylindrical( matrix, image_resolution, radius, theta, susceptibility ) ;
+
 my_sus_dist.save('cylindrical_sus_dist.nii');
+
 Bdz = fourier_based_field_est('cylindrical90_sus_dist.nii');
