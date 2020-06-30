@@ -3,10 +3,9 @@ function Bdz = fourier_based_field_est(chiDist_fname)
 % *************************************************************************
 % fourier_based_field_est
 %
-% DESCRIPTION: Function computes the magnetic field offset produced by a
-% sphere (with a given magnetic susceptibility offset relative to the
-% surrounding medium) subject to a uniform external magnetic field B0 that
-% is orientated along the z-axis.
+% DESCRIPTION: Function computes the magnetic field offset produced by 
+% susceptibility distribution subject to a uniform external magnetic field 
+% B0 that is orientated along the z-axis.
 %
 % REFERENCES: J.P. MARQUES, R. BOWTELL Concepts in Magnetic Resonance Part 
 %             B (Magnetic Resonance Engineering), Vol. 25B(1) 65?78 (2005)
