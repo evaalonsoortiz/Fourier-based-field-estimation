@@ -1,4 +1,4 @@
-The ChiDist class has 3 subclasses (SheppLogan, Spherical and Cylindrical) and can be used to simulate the susceptibility distribution arising from a sphere, cylinder or Shepp-Logan phantom. 
+**Overview:** The ChiDist class has 3 subclasses (SheppLogan, Spherical and Cylindrical) and can be used to simulate the susceptibility distribution arising from a sphere, cylinder or Shepp-Logan phantom. 
 
 fourier_based_field_est.m can be used to calculate the magnetic field offset produced by susceptibility distribution subject to a uniform external magnetic field B0 that is orientated along the z-axis.
 
