@@ -4,7 +4,7 @@ fourier_based_field_est.m can be used to calculate the magnetic field offset pro
 
 REFERENCES: J.P. MARQUES, R. BOWTELL Concepts in Magnetic Resonance Part B (Magnetic Resonance Engineering), Vol. 25B(1) 65?78 (2005)
 
-Requirements: 
+Dependencies: 
 [phantom3d.m](https://www.mathworks.com/matlabcentral/fileexchange/9416-3d-shepp-logan-phantom)
 
 Example usage:
