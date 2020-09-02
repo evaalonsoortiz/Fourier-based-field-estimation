@@ -51,12 +51,16 @@ classdef ChiDist < handle
             
             switch saveFormat
                 case 'nifti'
-                    nii_vol = make_nii(imrotate(fliplr(vol), -90));
-                    
-                    % set image resolution in nifti header
-                    nii_vol.hdr.dime.pixdim(2) = obj.image_res(1);
-                    nii_vol.hdr.dime.pixdim(3) = obj.image_res(2);
-                    nii_vol.hdr.dime.pixdim(4) = obj.image_res(3);
+                    if strcmp(obj.type,'Zubal')
+                        nii_vol = make_nii(vol);
+                    else
+                        nii_vol = make_nii(imrotate(fliplr(vol), -90));
+                        
+                        % set image resolution in nifti header
+                        nii_vol.hdr.dime.pixdim(2) = obj.image_res(1);
+                        nii_vol.hdr.dime.pixdim(3) = obj.image_res(2);
+                        nii_vol.hdr.dime.pixdim(4) = obj.image_res(3);
+                    end
                     
                     save_nii(nii_vol, [fileName '.nii']);
                     
