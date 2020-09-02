@@ -1,4 +1,4 @@
-function Bdz = fourier_based_field_est(chiDist_fname)
+function Bdz = fourier_based_field_est(chi, image_res, matrix)
 
 % *************************************************************************
 % fourier_based_field_est
@@ -14,6 +14,8 @@ function Bdz = fourier_based_field_est(chiDist_fname)
 % chiDist_fname : nifti file containing the magnetic susceptibility
 % distribution
 %
+% B0 : main field strength in Tesla
+%
 % OUPUTS
 % nifti file containing Bdz, the magnetic field offset due to the
 % susceptibility distribution found in 'chiDist_fname'
@@ -27,17 +29,9 @@ this_info = sprintf('%-20s : ',this_fname);
 fprintf([this_info, 'Current date and time: %s\n'], datestr(now));
 % ======================================================================= %
 
-% load nifti image and header
-chi = niftiread(chiDist_fname);
-chi_info = niftiinfo(chiDist_fname);
-
 %%---------------------------------------------------------------------- %%
 %% Define constants 
 %%---------------------------------------------------------------------- %%
-
-% image resolution
-image_res = chi_info.PixelDimensions;
-matrix = chi_info.ImageSize;
 
 % k-space window
 k_max = 1./(2.*image_res);
@@ -57,21 +51,11 @@ k_scaling_coeff = kz.^2./(kx.^2 + ky.^2 + kz.^2);
 
 % set the scaling coefficient to zero when k = 0
 k = kx.^2 + ky.^2 + kz.^2;    
-k_scaling_coeff(find(k == 0)) = 0;
+k_scaling_coeff(k == 0) = 0;
 
 % compute Bdz (the z-component of the magnetic field due to a sphere, relative to B0) in [ppm] 
 Bdz = ifftshift(ifftn(ifftshift((1/3-k_scaling_coeff).*FT_chi)));
 
-%%---------------------------------------------------------------------- %%
-%% Save Bdz to nifti
-%%---------------------------------------------------------------------- %%
-
-nii_vol = make_nii(imrotate(fliplr(Bdz), -90));
-
-path_parts = split(chi_info.Filename,'/');
-fileName = char(strcat('Bdz_',path_parts(end)));
-
-save_nii(nii_vol,fileName);
 
 %%---------------------------------------------------------------------- %%
 %% Plot some results
