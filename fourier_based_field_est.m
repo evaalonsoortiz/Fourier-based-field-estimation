@@ -10,16 +10,6 @@ function Bdz = fourier_based_field_est(chi, image_res, matrix)
 % REFERENCES: J.P. MARQUES, R. BOWTELL Concepts in Magnetic Resonance Part 
 %             B (Magnetic Resonance Engineering), Vol. 25B(1) 65?78 (2005)
 %
-% INPUTS
-% chiDist_fname : nifti file containing the magnetic susceptibility
-% distribution
-%
-% B0 : main field strength in Tesla
-%
-% OUPUTS
-% nifti file containing Bdz, the magnetic field offset due to the
-% susceptibility distribution found in 'chiDist_fname'
-%
 %
 %*************************************************************************
 
@@ -78,8 +68,8 @@ plot(squeeze(z(round(matrix(1)/2),round(matrix(2)/2),:))*image_res(3),1e6*squeez
 xlabel('z-position [mm]')
 ylabel('B_{dz} [ppm]')
 
-% plot Bdz along the y-axis
+% plot Bdz along the x-axis
 figure;
-plot(squeeze(y(round(matrix(1)/2),:,round(matrix(3)/2)))*image_res(2),1e6*squeeze(real(Bdz(round(matrix(1)/2),:,round(matrix(3)/2)))),'-.k','Linewidth',2);
-xlabel('y-position [mm]')
+plot(squeeze(x(:,round(matrix(2)/2),round(matrix(3)/2)))*image_res(1),1e6*squeeze(real(Bdz(:,round(matrix(2)/2),round(matrix(3)/2)))),'-.k','Linewidth',2);
+xlabel('x-position [mm]')
 ylabel('B_{dz} [ppm]')
