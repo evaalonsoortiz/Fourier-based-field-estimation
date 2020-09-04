@@ -48,7 +48,7 @@ classdef FBFest < handle
             k = kx.^2 + ky.^2 + kz.^2;
             k_scaling_coeff(k == 0) = 0;
             
-            % compute Bdz (the z-component of the magnetic field due to a sphere, relative to B0) in [ppm]
+            % compute Bdz (the z-component of the magnetic field due to a sphere, relative to B0)
             obj.volume = ifftshift(ifftn(ifftshift((1/3-k_scaling_coeff).*FT_chi)));
             
         end
@@ -83,9 +83,9 @@ classdef FBFest < handle
             switch saveFormat
                 case 'nifti'
                     if strcmp(obj.type,'Zubal')
-                        nii_vol = make_nii(real(vol));
+                        nii_vol = make_nii(real(1e6*vol)); % save real part in ppm
                     else
-                        nii_vol = make_nii(imrotate(fliplr(real(vol)), -90));
+                        nii_vol = make_nii(imrotate(fliplr(real(1e6*vol)), -90)); % save real part in ppm
                         
                         set image resolution in nifti header
                         nii_vol.hdr.dime.pixdim(2) = obj.image_res(1);
