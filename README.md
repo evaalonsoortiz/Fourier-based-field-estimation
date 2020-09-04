@@ -16,5 +16,5 @@ ZUBAL, I.G., HARRELL, C.R, SMITH, E.O, RATTNER, Z., GINDI, G. and HOFFER, P.B., 
 To generate a susceptibility distribution with the shape of cylinder:
 
 ```
-my_sus_dist = Cylindrical( matrix, image_resolution, radius, theta, susceptibility);
-Bdz = fourier_based_field_est(my_sus_dist, image_resolution, matrix);
+cylindrical_sus_dist = Cylindrical( matrix, image_res, radius, theta, susceptibility);
+cylindrical_dBz = FBFest( cylindrical_sus_dist.volume, image_res, matrix );
