@@ -25,7 +25,7 @@
           obj.zubal(zubal_fname, obj.sus);
        end
        
-       function obj = zubal(obj, zubal_fname, sus)       
+       function obj = zubal(obj, zubal_fname, sus)    %#ok<INUSD>
           % load zubal volume
           zubal_phantom = double(niftiread(zubal_fname));
           
