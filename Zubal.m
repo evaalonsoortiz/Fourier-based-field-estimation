@@ -6,8 +6,8 @@
        function obj = Zubal(zubal_fname)
           % Method Zubal (constructor)
           % must be used with a modified zubal phantom (distribution is not
-          % posssible, as per the conditions of the original zubal phantom): zubal_fname
-          % the orignial zubal phantom can be found here: http://noodle.med.yale.edu/zubal/data.htm
+          % possible, as per the conditions of the original zubal phantom): zubal_fname
+          % the original zubal phantom can be found here: http://noodle.med.yale.edu/zubal/data.htm
           
           % absolute susceptibility [ppm] values are from Buch et al. MRM 73:2185?2194 (2015)
           % susceptibility of fat is from https://onlinelibrary.wiley.com/doi/full/10.1002/mrm.27640
