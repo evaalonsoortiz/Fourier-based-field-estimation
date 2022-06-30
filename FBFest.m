@@ -87,7 +87,7 @@ classdef FBFest < handle
                     else
                         nii_vol = make_nii(imrotate(fliplr(real(1e6*vol)), -90)); % save real part in ppm
                         
-                        set image resolution in nifti header
+                        % set image resolution in nifti header
                         nii_vol.hdr.dime.pixdim(2) = obj.image_res(1);
                         nii_vol.hdr.dime.pixdim(3) = obj.image_res(2);
                         nii_vol.hdr.dime.pixdim(4) = obj.image_res(3);
