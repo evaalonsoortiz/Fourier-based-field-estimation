@@ -36,7 +36,11 @@
               sin(obj.theta)    0       cos(obj.theta)   0
               0             0              0     1];
           tform = affine3d(t);
-          obj.volume = imwarp(obj.volume,tform);
+          obj.volume = imwarp(obj.volume,tform, 'FillValues', obj.sus(2));
+
+          % Troncate the rotated volume to the desired size
+          margins = ((size(obj.volume)-obj.matrix) / 2);
+          obj.volume = obj.volume(1 + margins(1):margins(1) + obj.matrix(1), 1 + margins(2):margins(2) + obj.matrix(2), 1 + margins(3):margins(3) + obj.matrix(3));
             
        end
        
