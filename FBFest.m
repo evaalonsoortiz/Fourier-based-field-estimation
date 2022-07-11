@@ -4,16 +4,18 @@ classdef FBFest < handle
         matrix
         image_res
         volume
-        sus
+        sus % USI (not ppm)
         type
+        b0 % [T]
     end
     
     methods
-        function obj = FBFest( sus, image_res, matrix, varargin )
+        function obj = FBFest( sus, image_res, matrix, b0, varargin )
             % Method FBFest (constructor)
             obj.matrix  = matrix ;
             obj.image_res  = image_res ;
             obj.sus  = sus ;
+            obj.b0 = b0 ;
             
             if nargin > 3
                 obj.type = varargin;
@@ -30,9 +32,10 @@ classdef FBFest < handle
             
             % k-space window
             k_max = 1./(2.*obj.image_res);
-            
+            interval = 2 * k_max ./ obj.matrix;
+
             % define k-space grid
-            [kx,ky,kz] = ndgrid(linspace(-k_max(1),k_max(1),obj.matrix(1)),linspace(-k_max(2),k_max(2),obj.matrix(2)),linspace(-k_max(3),k_max(3),obj.matrix(3)));
+            [kx,ky,kz] = ndgrid(-k_max(1):interval(1):k_max(1) - interval(1),-k_max(2):interval(2):k_max(2) - interval(2),-k_max(3):interval(3):k_max(3) - interval(3));
             
             %%---------------------------------------------------------------------- %%
             %% Compute Bdz
@@ -42,14 +45,17 @@ classdef FBFest < handle
             FT_chi = fftshift(fftn(fftshift(obj.sus)));
             
             % calculate the scaling coefficient 'kz^2/k^2'
-            k_scaling_coeff = kz.^2./(kx.^2 + ky.^2 + kz.^2);
+            k2 = kx.^2 + ky.^2 + kz.^2;
+            k_scaling_coeff = kz.^2./k2;
             
-            % set the scaling coefficient to zero when k = 0
-            k = kx.^2 + ky.^2 + kz.^2;
-            k_scaling_coeff(k == 0) = 0;
-            
-            % compute Bdz (the z-component of the magnetic field due to a sphere, relative to B0)
-            obj.volume = ifftshift(ifftn(ifftshift((1/3-k_scaling_coeff).*FT_chi)));
+            % compute Bdz (the z-component of the magnetic field due to a
+            % sphere, relative to B0) FFT. The region of interest is
+            % assumed to be surrounded by a region of infinite extent whose
+            % susceptibility is equal to the susceptibility on the origin
+            % corner of the matrix.
+            bdzFFT = obj.b0 * (1/3 - k_scaling_coeff).*FT_chi;
+            bdzFFT(k2 == 0) = obj.b0 * obj.sus(1, 1, 1) * prod(obj.matrix) / 3;
+            obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
             
         end
         
