@@ -5,7 +5,7 @@
 
 clearvars;
 
-phantom = "cylinder"
+phantom = "sphere_buffer"
 switch(phantom)
 %%  An anisotropic rectangular susceptibility in a "little" volume
     case "rect" 
@@ -46,7 +46,7 @@ switch(phantom)
 %% A sphere with a bigger volume (add a buffer)
     case "sphere_buffer"
         dim_sans_buffer = [256, 256, 256];
-        dim = 2 * dim_sans_buffer;
+        dim = 4 * dim_sans_buffer;
         res = [1, 1, 1]; % volume unit
         susin = -0.72e-6; 
         susout = -0.36e-6; 
@@ -67,6 +67,7 @@ sectionx = round(dim(1) / 2) + 1;
 
 [x,y,z] = ndgrid(linspace(-dim(1)/2, dim(1) / 2, dim(1)), linspace(-dim(2)/2, dim(2) / 2 , dim(2)), linspace(-dim(3)/2, dim(3) / 2, dim(3)));
 r = sqrt(x.^2 + y.^2 + z.^2);
+tic
 if (strcmp(phantom, 'sphere') || strcmp(phantom, 'sphere_buffer'))
     % with Lorentz correction  (p. 753)
     dbz_out = (susin - susout) / 3 .* (radius ./ r).^3 .* (3 .* z.^2 ./ r.^2 - 1) + susout * b0 / 3;
@@ -90,7 +91,7 @@ elseif (strcmp(phantom, 'cylinder'))
     % Equivalent to a cylindrical mask because all the measures are
     % done through the center (the axes in the analytical solution and
     % simulation are not identically defined so the cylindrical mask
-    % does not suit), EXCEPT FOR THE AXIS PARRALLEL TO THE CYLINDER AXIS
+    % does not suit), EXCEPT FOR THE AXIS PARRALLEL TO THE CYLINDER AXES
     mask = +imutils.masks.spherical_mask(radius, dim, [res, res, res]); 
     dbz_in = dbz_in .* mask;
     dbz_out = dbz_out .* (1 - mask);
@@ -99,9 +100,12 @@ elseif (strcmp(phantom, 'cylinder'))
     dbz_analytical_ppm = dbz_analytical * 1e6;
     
 end
+toc
         
 %% Variation calculation
+tic
 dBz_obj = FBFest(sus_dist.volume, sus_dist.image_res, sus_dist.matrix, b0);
+toc
 dBz_map_ppm = dBz_obj.volume * 1e6;
 
 %% Plots to compare with analytical
