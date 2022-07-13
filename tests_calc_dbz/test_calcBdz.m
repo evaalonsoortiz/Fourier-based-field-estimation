@@ -105,10 +105,51 @@ end
 toc
         
 %% Variation calculation
-tic
-dBz_obj = FBFest(sus, res, dim, b0);
-toc
+% tic
+% dBz_obj = FBFest(sus, res, dim, b0);
+% toc
+    %%---------------------------------------------------------------------- %%
+    %% Define constants
+    %%---------------------------------------------------------------------- %%
+
+    % k-space window
+    k_max = 1./(2.*res);
+    interval = 2 * k_max ./ dim;
+
+    % define k-space grid
+    [kx,ky,kz] = ndgrid(-k_max(1):interval(1):k_max(1) - interval(1),-k_max(2):interval(2):k_max(2) - interval(2),-k_max(3):interval(3):k_max(3) - interval(3));
+
+    %%---------------------------------------------------------------------- %%
+    %% Compute Bdz
+    %%---------------------------------------------------------------------- %%
+
+    % compute the fourier transform of the susceptibility distribution
+    FT_chi = fftshift(fftn(fftshift(sus)));
+
+    % calculate the scaling coefficient 'kz^2/k^2'
+    k2 = kx.^2 + ky.^2 + kz.^2;
+    k_scaling_coeff = kz.^2./k2;
+    k_scaling_coeff(k2 == 0) = 0;
+
+    % compute Bdz (the z-component of the magnetic field due to a
+    % sphere, relative to B0) FFT. The region of interest is
+    % assumed to be surrounded by a region of infinite extent whose
+    % susceptibility is equal to the susceptibility on the origin
+    % corner of the matrix.
+    bdzFFT = b0 * (1/3 - k_scaling_coeff).*FT_chi;
+    bdzFFT(k2 == 0) = b0 * sus(1, 1, 1) * prod(dim) / 3;
+    obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
+    
 dBz_map_ppm = real(dBz_obj.volume * 1e6); %TODO remove real ? Loss of the y-translation
+
+%% Plot intermediate results
+% figure; imagesc(squeeze((1/3-k_scaling_coeff(:, :, sectionz)))); colorbar;
+% title('Multiplying volume in FT domain, x section')
+
+k_ifft = ifftshift(ifftn(ifftshift((1/3 - k_scaling_coeff))));
+
+figure; imagesc(squeeze(k_ifft(sectionx, :, :))), colorbar;
+title('Ifft of the multiplying volume (spatial domain), x section')
 
 %% Plots to compare with analytical
 figure;
