@@ -5,7 +5,7 @@
 
 %clearvars;
 
-phantom = "cylinder"
+phantom = "sphere"
 switch(phantom)
 %%  An anisotropic rectangular susceptibility in a "little" volume
     case "rect" 
@@ -15,12 +15,6 @@ switch(phantom)
         susout = 0;
         sus = zeros(dim) + susout;
         sus(7:10, 8:9, 6:11) = susin;
-        if param == 0
-        else
-            % Translation toward down-right to make the matrix symmetric 
-            sus = padarray(sus, [1 1 1], susout, 'pre');
-            sus = sus(1:dim(1), 1:dim(2), 1:dim(3));
-        end
         
 %% A sphere
     case "sphere"
@@ -34,15 +28,17 @@ switch(phantom)
 %% A cylinder
     case "cylinder"
         dim_without_buffer = [128, 128, 128];
-        dim = 1 * dim_without_buffer; % Multiply the dim_without_buffer by a power of 2
+        dim = [512, 512, 128]; % Multiply the dim_without_buffer by a power of 2
         res = [1, 1, 1]; % volume unit
         susin = -0.72e-6; 
         susout = -0.36e-6; 
         radius = 12 % volume unit
         theta = 0 % rad, tilt of the cylinder between B0 and y
         phi = pi/2 % angle between x and measure axis in the xy plane (pi/2 for measure along y, 0 for measure along z)
-        sus_dist = Cylindrical(dim, res, radius, theta, [susin susout]);
+        sus_dist = Cylindrical(dim_without_buffer, res, radius, theta, [susin susout]);
         sus = sus_dist.volume;
+        sus = padarray(sus, (dim - dim_without_buffer) / 2, susout, 'post');
+        sus = padarray(sus, (dim - dim_without_buffer) / 2, susout, 'pre');
 
 %% A sphere with a bigger volume (add a buffer)
     case "sphere_buffer"
@@ -95,7 +91,7 @@ elseif (strcmp(phantom, 'cylinder'))
     % done through the center (the axes in the analytical solution and
     % simulation are not identically defined so the cylindrical mask
     % does not suit), EXCEPT FOR THE AXIS PARALLEL TO THE CYLINDER AXES
-    mask = Cylindrical(dim, res, radius, theta, [susin susout]);
+    mask = Cylindrical(dim, res, radius, theta, [1 0]);
     dbz_in = dbz_in .* mask.volume;
     dbz_out = dbz_out .* (1 - mask.volume);
 
@@ -203,34 +199,34 @@ sgtitle(sprintf('y section, index %u, %s, radius %u', sectiony, 'sphere', radius
 
 %% Plots 
 
-% figure;
-% plot(squeeze(dbz_analytical_ppm(512/2+1, (512-128)/2+1:(512-128)/2+128, 512/2+1 )), 'LineWidth', 1);
-% hold on
-% plot(1:128, squeeze(dBz_map_ppm128(128/2+1, :, 128/2+1)), 'LineWidth', 1);
-% hold on
-% plot(1:128, squeeze(dBz_map_ppm256(256/2+1, (256-128)/2+1:(256-128)/2+128, 256/2+1 )), 'LineWidth', 1);
-% hold on
-% plot(1:128, squeeze(dBz_map_ppm512(512/2+1, (512-128)/2+1:(512-128)/2+128, 512/2+1 )), 'LineWidth', 1);
-% hold off
-% xlabel('grid position')
-% ylabel('dBz (ppm)')
-% legend('Analytical', 'simulation 128^3', 'simulation 256^3', 'simulation 512^3');
-% title(sprintf('Field in the %s phantom in ppm along y axis with susin=%0.2e and susout=%0.2e', 'sphere', susin, susout))
+figure;
+plot(squeeze(dBz_analytical_ppm_r48_th0_so036_512_x(512/2+1, (512-128)/2+1:(512-128)/2+128, 512/2+1 )), 'LineWidth', 1);
+hold on
+plot(1:128, squeeze(dBz_map_ppm_r48_th0_so036_128_x(128/2+1, :, 128/2+1)), 'LineWidth', 1);
+hold on
+plot(1:128, squeeze(dBz_map_ppm_r48_th0_so036_256_x(256/2+1, (256-128)/2+1:(256-128)/2+128, 256/2+1 )), 'LineWidth', 1);
+hold on
+plot(1:128, squeeze(dBz_map_ppm_r48_th0_so036_512_x(512/2+1, (512-128)/2+1:(512-128)/2+128, 512/2+1 )), 'LineWidth', 1);
+hold off
+xlabel('grid position')
+ylabel('dBz (ppm)')
+legend('Analytical', 'simulation 128^3', 'simulation 256^3', 'simulation 512^3');
+title(sprintf('Field in the %s phantom in ppm along y axis with susin=%0.2e and susout=%0.2e', phantom, susin, susout))
 % % 
 % figure;
-% plot(linspace(-256, 256, 512), squeeze(dBz_analytical_ppm512(512/2+1, 512/2+1, :)), 'LineWidth', 1);
+% plot(squeeze(dBz_analytical_ppm_r48_th0_so036_512_z(512/2+1, 512/2+1, (512-128)/2+1:(512-128)/2+128 )), 'LineWidth', 1);
 % hold on
-% plot(linspace(-64, 64, 128), squeeze(dBz_map_ppm128(128/2+1, 128/2+1, :)), 'LineWidth', 1);
+% plot(1:128, squeeze(dBz_map_ppm_r48_th0_so036_128_z(128/2+1, 128/2+1, :)), 'LineWidth', 1);
 % hold on
-% plot(linspace(-128, 128, 256), squeeze(dBz_map_ppm256(256/2+1, 256/2+1, :)), 'LineWidth', 1);
+% plot(1:128, squeeze(dBz_map_ppm_r48_th0_so036_256_z(256/2+1, 256/2+1, (256-128)/2+1:(256-128)/2+128 )), 'LineWidth', 1);
 % hold on
-% plot(linspace(-256, 256, 512), squeeze(dBz_map_ppm512(512/2+1, 512/2+1, :)), 'LineWidth', 1);
+% plot(1:128, squeeze(dBz_map_ppm_r48_th0_so036_512_z(512/2+1, 512/2+1, (512-128)/2+1:(512-128)/2+128 )), 'LineWidth', 1);
 % hold off
 % xlabel('grid position')
 % ylabel('dBz (ppm)')
 % legend('Analytical', 'simulation 128^3', 'simulation 256^3', 'simulation 512^3');
 % title(sprintf('Field in the %s phantom, radius %u in ppm along z axis with susin=%0.2e and susout=%0.2e', 'sphere', 48, susin, susout))
-%
+
 % figure;
 % subplot(2, 1, 1)
 % plot(squeeze(dbz_analytical_ppm(sectionx, sectiony, :)));
@@ -259,6 +255,32 @@ sgtitle(sprintf('y section, index %u, %s, radius %u', sectiony, 'sphere', radius
 % ylabel('dBz (ppm)')
 % legend('Analytical', 'simulation radius 12 dim 128','simulation radius 48 dim 512');
 % title(sprintf('Field in the %s phantom in ppm along z axis with susin=%0.2e and susout=%0.2e', 'sphere', susin, susout))
+
+figure;
+plot(squeeze(dBz_analytical_ppm_r48_th0_so036_512_x(512/2+1, (512-128)/2+1:(512-128)/2+128, 128/2+1 )), 'LineWidth', 1);
+hold on
+plot(1:128, squeeze(dBz_map_ppm_r48_th0_so036_128_x(128/2+1, :, 128/2+1)), 'LineWidth', 1);
+hold on
+plot(1:128, squeeze(dBz_map_ppm_r48_th0_so036_256_256_128_x(256/2+1, (256-128)/2+1:(256-128)/2+128, 128/2+1 )), 'LineWidth', 1);
+hold on
+plot(1:128, squeeze(dBz_map_ppm_r48_th0_so036_512_512_128_x(512/2+1, (512-128)/2+1:(512-128)/2+128, 128/2+1 )), 'LineWidth', 1);
+hold off
+xlabel('grid position')
+ylabel('dBz (ppm)')
+legend('Analytical', 'simulation 128^3', 'simulation 256^2*128', 'simulation 512^2*128');
+title(sprintf('Field in the %s phantom in ppm along y axis with susin=%0.2e and susout=%0.2e', phantom, susin, susout))
+
+figure;
+plot(squeeze(dBz_analytical_ppm_r48_th0_so036_512_x(512/2+1, (512-128)/2+1:(512-128)/2+128, 128/2+1 )), 'LineWidth', 1);
+hold on
+plot(1:128, squeeze(dBz_map_ppm_r48_th0_so036_512_x(512/2+1, (512-128)/2+1:(512-128)/2+128, 512/2+1 )), 'LineWidth', 1);
+hold on
+plot(1:128, squeeze(dBz_map_ppm_r48_th0_so036_512_512_128_x(512/2+1, (512-128)/2+1:(512-128)/2+128, 128/2+1 )), 'LineWidth', 1);
+hold off
+xlabel('grid position')
+ylabel('dBz (ppm)')
+legend('Analytical', 'simulation 512^3', 'simulation 512^2*128');
+title(sprintf('Field in the %s phantom in ppm along y axis with susin=%0.2e and susout=%0.2e', phantom, susin, susout))
 
 % addition = zeros(3*256, 1);
 % addition(1:512, 1) = squeeze(dBz_map_ppmr48d512so0(512/2+1, 512/2+1, :));
