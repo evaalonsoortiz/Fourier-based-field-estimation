@@ -1,3 +1,4 @@
 # ignore .m~ temp files
 *.m~
 *.DS_Store
+*.mat
