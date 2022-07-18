@@ -17,7 +17,7 @@ function [distROI, d8_matrix] = calc_dist_ROI(matrix)
 % _INPUT ARGUMENTS_
 %
 %    matrix
-%      A 3D matrix with an element surrounding by a uniform background. In
+%      A 3D matrix with an element surrounded by a uniform background. In
 %      particular, the value in the (1, 1, 1) corner has to be part of the
 %      background.
 %
