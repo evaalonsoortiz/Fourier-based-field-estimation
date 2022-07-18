@@ -6,3 +6,5 @@ zubal_sus_dist = Zubal('zubal_EAO.nii');
 
 % Properties of the phantom : dimensions 256x256x128
 % Resolution 1.1x1.1x1.4
+
+sus_low = sub_sample(zubal_sus_dist.volume);
