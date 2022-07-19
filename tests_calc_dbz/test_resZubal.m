@@ -63,12 +63,19 @@ figure;
 volume_gray_filt = uint8(255*mat2gray(abs(zubal_filt)));
 montage(volume_gray_filt); 
 
+%% Down-sampling and real part
+zubal_downsamp = real(zubal_filt(1:2:end, 1:2:end, 1:2:end));
+
 %% Diffs
 figure;
 diff2 = real(zubal_filt(1:2:end, 1:2:end, 1:2:end)) - zubal_sus_dist.volume(1:2:end, 1:2:end, 1:2:end);
 volume_gray = uint8(255*mat2gray(abs(diff2)));
 montage(volume_gray);
 title(sprintf('Absolute difference between 3D down-sampled susceptibility map and Gaussian filtered with a STD 64x64x32'));
+
+%% Test of field shift map determination
+
+
 
 %% Useful commands :
 
