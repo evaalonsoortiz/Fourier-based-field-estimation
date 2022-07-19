@@ -148,10 +148,10 @@ dBz_map_ppm = dbz_volume * 1e6; %TODO remove real ? Loss of the y-translation
 % figure; imagesc(squeeze((1/3-k_scaling_coeff(:, :, sectionz)))); colorbar;
 % title('Multiplying volume in FT domain, x section')
 
-k_ifft = ifftshift(ifftn(ifftshift((1/3 - k_scaling_coeff))));
-
-figure; imagesc(squeeze(k_ifft(sectionx, :, :))), colorbar;
-title('Ifft of the multiplying volume (spatial domain), x section')
+% k_ifft = ifftshift(ifftn(ifftshift((1/3 - k_scaling_coeff))));
+% 
+% figure; imagesc(squeeze(k_ifft(sectionx, :, :))), colorbar;
+% title('Ifft of the multiplying volume (spatial domain), x section')
 
 %% Plots to compare with analytical
 figure;
