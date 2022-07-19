@@ -1,7 +1,10 @@
 %% Script to test subsample and the effect on resolution on the Zubal phantom
+
+%% 
+%%    TEST BUFFER
+%%
 %% Parameters
 dbz_path = 'dbz_ZubalTest_bufferxy512z256_trunc'
-
 %% generate susceptibility distribution for the modified Zubal phantom,
 % previously downloaded
     % Properties of the phantom : 
@@ -72,29 +75,32 @@ dBz_obj.save(dbz_path);
 % Properties of the phantom : dimensions 256x256x128
 % Resolution 1.1x1.1x1.4
 
+%% 
+%%    TEST SUB-SAMPLING
+%%
 %% First filters
-filter = 'gauss'; param = 0.5;
-sus_low = sub_sample_section(zubal_sus_dist.volume, 'z', 65, filter, param);
-
-figure; imagesc(sus_low(57:75, 102:111)); colorbar;
-title(sprintf('down-sampled %s filtered susceptibility map with a parameter %0.2f', filter, param));
-
-sus_low_3D = sub_sample_3D(zubal_sus_dist.volume, filter, param);
-
-figure; imagesc(sus_low_3D(57:75, 102:111, 33)); colorbar;
-title(sprintf('3D down-sampled %s filtered susceptibility map with a parameter %0.2f', filter, param));
-
-figure;
-volume_gray = uint8(255*(1 - mat2gray(sus_low_3D)));
-montage(volume_gray);
-title(sprintf('3D down-sampled %s filtered susceptibility map with a parameter %0.2f', filter, param));
-
-% plot difference
-figure;
-diff1 = abs(zubal_sus_dist.volume(1:2:end, 1:2:end, 1:2:end) - sus_low_3D);
-volume_gray = uint8(255*mat2gray(diff1));
-montage(volume_gray);
-title(sprintf('Absolute difference between 3D down-sampled susceptibility map and %s filtered with a parameter %0.2f', filter, param));
+% filter = 'gauss'; param = 0.5;
+% sus_low = sub_sample_section(zubal_sus_dist.volume, 'z', 65, filter, param);
+% 
+% figure; imagesc(sus_low(57:75, 102:111)); colorbar;
+% title(sprintf('down-sampled %s filtered susceptibility map with a parameter %0.2f', filter, param));
+% 
+% sus_low_3D = sub_sample_3D(zubal_sus_dist.volume, filter, param);
+% 
+% figure; imagesc(sus_low_3D(57:75, 102:111, 33)); colorbar;
+% title(sprintf('3D down-sampled %s filtered susceptibility map with a parameter %0.2f', filter, param));
+% 
+% figure;
+% volume_gray = uint8(255*(1 - mat2gray(sus_low_3D)));
+% montage(volume_gray);
+% title(sprintf('3D down-sampled %s filtered susceptibility map with a parameter %0.2f', filter, param));
+% 
+% % plot difference
+% figure;
+% diff1 = abs(zubal_sus_dist.volume(1:2:end, 1:2:end, 1:2:end) - sus_low_3D);
+% volume_gray = uint8(255*mat2gray(diff1));
+% montage(volume_gray);
+% title(sprintf('Absolute difference between 3D down-sampled susceptibility map and %s filtered with a parameter %0.2f', filter, param));
 
 %% Zubal FFT
 % zubal_fft = fftshift(fftn(fftshift(zubal_sus_dist.volume)));
@@ -113,34 +119,71 @@ sigma = [64, 64, 32];
 
 [kx, ky, kz] = ndgrid(-127:128, -127:128, -63:64);
 gauss_3D = gaussmf(kx, [sigma(1), 0]) .* gaussmf(ky, [sigma(2), 0]) .* gaussmf(kz, [sigma(3), 0]);
-
-figure; imagesc(squeeze(gauss_3D(:, :, 65))); colorbar; title('3D gaussian visualisation');
-volume_gray = uint8(255*mat2gray(gauss_3D));
-figure; montage(volume_gray); title('3D gaussian visualisation bis')
-figure; imagesc(squeeze(abs(ifftshift(ifftn(ifftshift(gauss_3D(:, :, 64))))))); colorbar; title('ifft of the 3D gaussian');
+% 
+% figure; imagesc(squeeze(gauss_3D(:, :, 65))); colorbar; title('3D gaussian visualisation');
+% volume_gray = uint8(255*mat2gray(gauss_3D));
+% figure; montage(volume_gray); title('3D gaussian visualisation bis')
+% figure; imagesc(squeeze(abs(ifftshift(ifftn(ifftshift(gauss_3D(:, :, 64))))))); colorbar; title('ifft of the 3D gaussian');
 
 % Zubal FFT and filtering
 zubal_fft = fftshift(fftn(fftshift(zubal_sus_dist.volume)));
 zubal_filt_fft = zubal_fft .* gauss_3D;
 zubal_filt = ifftshift(ifftn(ifftshift(zubal_filt_fft)));
 
-figure; 
-volume_gray_filt = uint8(255*mat2gray(abs(zubal_filt)));
-montage(volume_gray_filt); 
+% figure; 
+% volume_gray_filt = uint8(255*mat2gray(abs(zubal_filt)));
+% montage(volume_gray_filt); 
 
 %% Down-sampling and real part
 zubal_downsamp = real(zubal_filt(1:2:end, 1:2:end, 1:2:end));
 
 %% Diffs
-figure;
-diff2 = real(zubal_filt(1:2:end, 1:2:end, 1:2:end)) - zubal_sus_dist.volume(1:2:end, 1:2:end, 1:2:end);
-volume_gray = uint8(255*mat2gray(abs(diff2)));
+% figure;
+% diff2 = real(zubal_filt(1:2:end, 1:2:end, 1:2:end)) - zubal_sus_dist.volume(1:2:end, 1:2:end, 1:2:end);
+% volume_gray = uint8(255*mat2gray(abs(diff2)));
+% montage(volume_gray);
+% title(sprintf('Absolute difference between 3D down-sampled susceptibility map and Gaussian filtered with a STD 64x64x32'));
+
+%% 
+%%    TEST SUBSAMPLING + FIELD SHIFT ESTIMATION
+%%
+%% New susceptibility and add buffer
+
+sus = zubal_downsamp;
+dim_without_buffer = size(sus);
+dim = 2 * dim_without_buffer; %+ [0, 0, 128];
+% Add a buffer
+sus = padarray(sus, (dim - dim_without_buffer) / 2, sus(1, 1, 1), 'post');
+sus = padarray(sus, (dim - dim_without_buffer) / 2, sus(1, 1, 1), 'pre');
+padDim =  (dim - dim_without_buffer) / 2;
+
+%% Variation calculation
+% tic
+dBz_obj_downsamp = FBFest(sus, zubal_sus_dist.image_res, dim, b0);
+% toc
+dBz_map_ppm_downsamp = real(dBz_obj.volume * 1e6); %TODO remove real ? Loss of the y-translation
+
+%Truncate :
+dBz_obj_downsamp.matrix = dim_without_buffer;
+dBz_obj_downsamp.volume = dBz_obj_downsamp.volume( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3));
+% Save NIFTI image of the field shift
+dBz_obj_downsamp.save([dbz_path '_downsamp']);
+
+%% Down sampling the true dbz map
+dBz_obj.matrix = dBz_obj.matrix / 2;
+dBz_obj.volume = dBz_obj.volume(1:2:end, 1:2:end, 1:2:end);
+
+%% Comparison
+diff3 = abs(dBz_obj.volume - dBz_obj_downsamp.volume);
+
+volume_gray = uint8(255*mat2gray(abs(diff3)));
 montage(volume_gray);
-title(sprintf('Absolute difference between 3D down-sampled susceptibility map and Gaussian filtered with a STD 64x64x32'));
+title(sprintf('Absolute difference between 3D down-sampled field map (ppm) and Gaussian filtered with a STD 64x64x32'));
 
-%% Test of field shift map determination
-
-
+% max de la difference : max(diff3, [], 'all') is 1.0001e-05
+% mean de la difference : max(diff3, [], 'all') is 1.0921e-07
+% mean of true ppm : mean(abs(dBz_obj.volume),'all') is 2.3895e-06
+% mean of true ppm : mean(abs(dBz_obj_downsamp.volume),'all') is  2.3355e-06
 
 %% Useful commands :
 
