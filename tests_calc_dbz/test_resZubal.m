@@ -117,7 +117,8 @@ sus_filt_imgauss3 = imgaussfilt3(zubal_sus_dist.volume, sigma, 'FilterDomain', '
 % figure; montage(volume_gray); title('Test imgaussfilt3');
 
 %% Test filtering in frequency domain using gaussmf
-sigma = [64, 64, 32];
+sigma = [128, 128, 64];
+% sigma = [64, 64, 32];
 
 [kx, ky, kz] = ndgrid(-127:128, -127:128, -63:64);
 gauss_3D = gaussmf(kx, [sigma(1), 0]) .* gaussmf(ky, [sigma(2), 0]) .* gaussmf(kz, [sigma(3), 0]);
@@ -147,7 +148,7 @@ zubal_downsamp = real(zubal_filt(1:2:end, 1:2:end, 1:2:end));
 % title(sprintf('Absolute difference between 3D down-sampled susceptibility map and Gaussian filtered with a STD 64x64x32'));
 
 %% 
-%%    TEST SUBSAMPLING + FIELD SHIFT ESTIMATION
+%%    TEST FIELD SHIFT ESTIMATION ON SUBSAMPLED
 %%
 %% New susceptibility and add buffer
 
@@ -173,19 +174,55 @@ dBz_obj_downsamp.save([dbz_path '_downsamp']);
 
 %% Down sampling the true dbz map
 dBz_obj.matrix = dBz_obj.matrix / 2;
-dBz_obj.volume = dBz_obj.volume(1:2:end, 1:2:end, 1:2:end);
+dBz_obj.volume = dBz_obj.volume(1:2:end, 1:2:end, 1:2:end); % Down sampling the calculated field shift
 
 %% Comparison
 diff3 = abs(dBz_obj.volume - dBz_obj_downsamp.volume);
 
-volume_gray = uint8(255*mat2gray(abs(diff3)));
+volume_gray = uint8(255*mat2gray(diff3));
 montage(volume_gray);
 title(sprintf('Absolute difference between 3D down-sampled field map (ppm) and Gaussian filtered with a STD 64x64x32'));
+
+
+figure; imagesc(squeeze(real(dBz_obj.volume(:, :, 33)))); colorbar;
+title('Section of the  3D down-sampled field map (ppm)')
+
+figure; imagesc(squeeze(real(dBz_obj_downsamp.volume(:, :, 33)))); colorbar;
+title('Section of Gaussian filtered with a STD 64x64x32 and down-sampled field map (ppm)')
+
+figure; imagesc(squeeze(diff3(:, :, 33))); colorbar;
+title('Section of the absolute difference between 3D down-sampled field map (ppm) and Gaussian filtered with a STD 64x64x32')
+store_disp{1} = squeeze(real(dBz_obj.volume(:, :, 33)));
+store_disp{2} = squeeze(real(dBz_obj_downsamp.volume(:, :, 33)));
+store_disp{3} = squeeze(diff3(:, :, 33));
+a = +imutils.displayExperiment(3, store_disp, [0], ...
+    {'3D down-sampled field map (ppm)', 'Gaussian filtered with a STD 40x40x20 and down-sampled field map (ppm)', 'Difference'}, '', 'Section of the  3D down-sampled field map (ppm)');
 
 % max de la difference : max(diff3, [], 'all') is 1.0001e-05
 % mean de la difference : max(diff3, [], 'all') is 1.0921e-07
 % mean of true ppm : mean(abs(dBz_obj.volume),'all') is 2.3895e-06
 % mean of true ppm : mean(abs(dBz_obj_downsamp.volume),'all') is  2.3355e-06
+%% Comparison with different sigma
+sectionz = 50;
+store_disp{1} = squeeze(real(dBz_obj.volume(:, :, sectionz)));
+diff3 = abs(dBz_obj.volume - dBz_obj.volume);
+store_disp{5} = squeeze(diff3(:, :, sectionz));
+
+store_disp{2} = squeeze(real(vol_ds_323216(:, :, sectionz)));
+diff3 = abs(dBz_obj.volume - vol_ds_323216);
+store_disp{6} = squeeze(diff3(:, :, sectionz));
+
+store_disp{3} = squeeze(real(vol_ds_646432(:, :, sectionz)));
+diff3 = abs(dBz_obj.volume - vol_ds_646432);
+store_disp{7} = squeeze(diff3(:, :, sectionz));
+
+store_disp{4} = squeeze(real(vol_ds_12812864(:, :, sectionz)));
+diff3 = abs(dBz_obj.volume - vol_ds_12812864);
+store_disp{8} = squeeze(diff3(:, :, sectionz));
+
+a = +imutils.displayExperiment(2, store_disp, [0, 0.5, 1, 2], ...
+    {'Gaussian filtered down-sampled field map (ppm), STD (64x64x32)x', 'Difference'}, 'factor', 'Section of the  3D down-sampled field map (ppm)')
+
 
 %% Useful commands :
 
