@@ -11,6 +11,8 @@ dbz_path = 'dbz_ZubalTest_bufferxy512z256_trunc'
     % dimensions 256x256x128
     % Resolution 1.1x1.1x1.4
 zubal_sus_dist = Zubal('zubal_EAO.nii');
+sus_nii = make_nii(zubal_sus_dist.volume);
+save_nii(sus_nii, 'sus_zubal_EAO.nii')
 b0 = 3; % [T]
 
 sus = zubal_sus_dist.volume;
