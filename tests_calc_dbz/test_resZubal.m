@@ -4,40 +4,40 @@
 %%    TEST BUFFER
 %%
 %% Parameters
-dbz_path = 'zubal_downsamp/dbz_ZubalTest'
-b0 = 3; % [T]
+% dbz_path = 'zubal_downsamp/dbz_ZubalTest'
+% b0 = 3; % [T]
 %% generate susceptibility distribution for the modified Zubal phantom,
-% previously downloaded
-    % Properties of the phantom : 
-    % dimensions 256x256x128
-    % Resolution 1.1x1.1x1.4
-zubal_sus_dist = Zubal('zubal_EAO.nii');
-sus_nii = make_nii(zubal_sus_dist.volume);
-save_nii(sus_nii, 'sus_zubal_EAO.nii')
-
-dim_without_buffer = zubal_sus_dist.matrix;
-
-sus = zubal_sus_dist.volume;
-
-dim = 1 * dim_without_buffer;
-% Add a buffer
-sus = padarray(sus, (dim - dim_without_buffer) / 2, sus(1, 1, 1));
-padDim =  (dim - dim_without_buffer) / 2;
-
-
+% % previously downloaded
+%     % Properties of the phantom : 
+%     % dimensions 256x256x128
+%     % Resolution 1.1x1.1x1.4
+% zubal_sus_dist = Zubal('zubal_EAO.nii');
+% sus_nii = make_nii(zubal_sus_dist.volume);
+% save_nii(sus_nii, 'sus_zubal_EAO.nii')
+% 
+% dim_without_buffer = zubal_sus_dist.matrix;
+% 
+% sus = zubal_sus_dist.volume;
+% 
+% dim = 1 * dim_without_buffer;
+% % Add a buffer
+% sus = padarray(sus, (dim - dim_without_buffer) / 2, sus(1, 1, 1));
+% padDim =  (dim - dim_without_buffer) / 2;
+% 
+% 
 %% Variation calculation "template"
-% tic
-t0 = cputime;
-dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, b0);
-t1 = cputime;
-
-%Truncate :
-dBz_obj.matrix = dim_without_buffer;
-dBz_obj.volume = dBz_obj.volume( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3));
-% Save NIFTI image of the field shift
-%dBz_obj.save(sprintf('%s_y%u_z%u', dbz_path, xy_dims(zi), z_dims(zi)));
-dBz_map_ppm = real(dBz_obj.volume * 1e6); %TODO remove real ? Loss of the y-translation
-    
+% % tic
+% t0 = cputime;
+% dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, b0);
+% t1 = cputime;
+% 
+% %Truncate :
+% dBz_obj.matrix = dim_without_buffer;
+% dBz_obj.volume = dBz_obj.volume( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3));
+% % Save NIFTI image of the field shift
+% %dBz_obj.save(sprintf('%s_y%u_z%u', dbz_path, xy_dims(zi), z_dims(zi)));
+% dBz_map_ppm = real(dBz_obj.volume * 1e6); %TODO remove real ? Loss of the y-translation
+%     
 %% Experiment 1 : Variation calculation with different buffers
 
 % n = 40;
@@ -189,6 +189,37 @@ dBz_map_ppm = real(dBz_obj.volume * 1e6); %TODO remove real ? Loss of the y-tran
 %% 
 %%    TEST SUB-SAMPLING
 %%
+%% Parameters
+dbz_path = 'zubal_downsamp/dbz_ZubalTest';
+b0 = 3; % [T]
+%% generate susceptibility distribution for the modified Zubal phantom,
+% previously downloaded
+    % Properties of the phantom : 
+    % dimensions 256x256x128
+    % Resolution 1.1x1.1x1.4
+phantom = 'zubal'
+switch(phantom)
+    case 'zubal'
+        zubal_sus_dist = Zubal('zubal_EAO.nii');
+        sus_nii = make_nii(zubal_sus_dist.volume);
+        save_nii(sus_nii, 'sus_zubal_EAO.nii')
+
+        dim_without_buffer = zubal_sus_dist.matrix;
+        dim = 1 * dim_without_buffer;
+
+        sus = zubal_sus_dist.volume;
+    case 'rect'
+        dim_without_buffer = [8, 8, 8];
+        dim = 1 * dim_without_buffer;
+        res = [1,1,1];
+        sus = zeros(dim);
+        sus(2:5, 3:5, 4:7) = 1;
+end
+
+% Add a buffer
+padDim =  (dim - dim_without_buffer) / 2;
+sus = padarray(sus, padDim, sus(1, 1, 1));
+
 %% First filters
 % % filter = 'gauss'; param = 0.5;
 % % sus_low = sub_sample_section(zubal_sus_dist.volume, 'z', 65, filter, param);
@@ -226,10 +257,11 @@ dBz_map_ppm = real(dBz_obj.volume * 1e6); %TODO remove real ? Loss of the y-tran
 % % figure; montage(volume_gray); title('Test imgaussfilt3');
 % 
 %% Filtering in frequency domain using gaussmf
-% WARNING : Mirroring the volume in order to do the convulotion as wanted
+
 dim_pad = 2; % dim_pad pixels will be added in each direction
 sigma = [128, 128, 64];
-zsection = 65; xsection = 129;
+zsection =  dim(3) / 2 + 1;
+xsection = dim(1) / 2 + 1;
 % sigma = [64, 64, 32];
 
 [kx, ky, kz] = ndgrid(-dim(1)/2 - dim_pad + 1:dim(1)/2 + dim_pad, -dim(2)/2 - dim_pad + 1:dim(2)/2 + dim_pad, -dim(3)/2 - dim_pad + 1:dim(3)/2 + dim_pad);
@@ -246,16 +278,27 @@ zubal_filt_fft = zubal_fft .* gauss_3D;
 zubal_filt = ifftshift(ifftn(ifftshift(zubal_filt_fft)));
 
 zubal_filt = zubal_filt(dim_pad + 1: end - dim_pad, dim_pad + 1: end - dim_pad, dim_pad + 1: end - dim_pad);
-dBz_map_ppm_filt = real(dBz_obj_filt. volume * 1e6);
 
 figure; 
 volume_gray_filt = uint8(255*mat2gray(abs(zubal_filt)));
 montage(volume_gray_filt); 
 title('Filtered susceptibility')
 
+figure; 
+volume_gray_filt = uint8(255*mat2gray(abs(sus)));
+montage(volume_gray_filt); 
+title('Initial susceptibility')
+
+figure; 
+volume_gray_filt = uint8(255*mat2gray(abs(diff_ppm)));
+montage(volume_gray_filt); 
+title('Difference')
 %% Experiment 2 : Comparing calculation between the initial susceptibility and the filtered one
 
 dBz_obj_filt = FBFest(zubal_filt, zubal_sus_dist.image_res, dim, b0);
+dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, b0);
+dBz_map_ppm_filt = real(dBz_obj_filt.volume * 1e6);
+dBz_map_ppm = real(dBz_obj.volume * 1e6);
 
 %%
 figure; 
@@ -302,76 +345,76 @@ zubal_downsamp = real(zubal_filt(1:2:end, 1:2:end, 1:2:end));
 %%
 %% New susceptibility and add buffer
 
-sus = zubal_downsamp;
-dim_without_buffer = size(sus);
-dim = 2 * dim_without_buffer; %+ [0, 0, 128];
-% Add a buffer
-sus = padarray(sus, (dim - dim_without_buffer) / 2, sus(1, 1, 1));
-padDim =  (dim - dim_without_buffer) / 2;
-
-%% Variation calculation
-% tic
-dBz_obj_downsamp = FBFest(sus, zubal_sus_dist.image_res, dim, b0);
-% toc
-dBz_map_ppm_downsamp = real(dBz_obj.volume * 1e6); %TODO remove real ? Loss of the y-translation
-
-%Truncate :
-dBz_obj_downsamp.matrix = dim_without_buffer;
-dBz_obj_downsamp.volume = dBz_obj_downsamp.volume( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3));
-% Save NIFTI image of the field shift
-dBz_obj_downsamp.save([dbz_path '_downsamp']);
-
-%% Down sampling the true dbz map
-dBz_obj.matrix = dBz_obj.matrix / 2;
-dBz_obj.volume = dBz_obj.volume(1:2:end, 1:2:end, 1:2:end); % Down sampling the calculated field shift
-
-%% Comparison
-diff3 = abs(dBz_obj.volume - dBz_obj_downsamp.volume);
-
-volume_gray = uint8(255*mat2gray(diff3));
-montage(volume_gray);
-title(sprintf('Absolute difference between 3D down-sampled field map (ppm) and Gaussian filtered with a STD 64x64x32'));
-
-
-figure; imagesc(squeeze(real(dBz_obj.volume(:, :, 33)))); colorbar;
-title('Section of the  3D down-sampled field map (ppm)')
-
-figure; imagesc(squeeze(real(dBz_obj_downsamp.volume(:, :, 33)))); colorbar;
-title('Section of Gaussian filtered with a STD 64x64x32 and down-sampled field map (ppm)')
-
-figure; imagesc(squeeze(diff3(:, :, 33))); colorbar;
-title('Section of the absolute difference between 3D down-sampled field map (ppm) and Gaussian filtered with a STD 64x64x32')
-store_disp{1} = squeeze(real(dBz_obj.volume(:, :, 33)));
-store_disp{2} = squeeze(real(dBz_obj_downsamp.volume(:, :, 33)));
-store_disp{3} = squeeze(diff3(:, :, 33));
-a = +imutils.displayExperiment(3, store_disp, [0], ...
-    {'3D down-sampled field map (ppm)', 'Gaussian filtered with a STD 40x40x20 and down-sampled field map (ppm)', 'Difference'}, '', 'Section of the  3D down-sampled field map (ppm)');
-
-% max de la difference : max(diff3, [], 'all') is 1.0001e-05
-% mean de la difference : max(diff3, [], 'all') is 1.0921e-07
-% mean of true ppm : mean(abs(dBz_obj.volume),'all') is 2.3895e-06
-% mean of true ppm : mean(abs(dBz_obj_downsamp.volume),'all') is  2.3355e-06
-%% Comparison with different sigma
-sectionz = 50;
-store_disp{1} = squeeze(real(dBz_obj.volume(:, :, sectionz)));
-diff3 = abs(dBz_obj.volume - dBz_obj.volume);
-store_disp{5} = squeeze(diff3(:, :, sectionz));
-
-store_disp{2} = squeeze(real(vol_ds_323216(:, :, sectionz)));
-diff3 = abs(dBz_obj.volume - vol_ds_323216);
-store_disp{6} = squeeze(diff3(:, :, sectionz));
-
-store_disp{3} = squeeze(real(vol_ds_646432(:, :, sectionz)));
-diff3 = abs(dBz_obj.volume - vol_ds_646432);
-store_disp{7} = squeeze(diff3(:, :, sectionz));
-
-store_disp{4} = squeeze(real(vol_ds_12812864(:, :, sectionz)));
-diff3 = abs(dBz_obj.volume - vol_ds_12812864);
-store_disp{8} = squeeze(diff3(:, :, sectionz));
-
-a = +imutils.displayExperiment(2, store_disp, [0, 0.5, 1, 2], ...
-    {'Gaussian filtered down-sampled field map (ppm), STD (64x64x32)x', 'Difference'}, 'factor', 'Section of the  3D down-sampled field map (ppm)')
-
+% sus = zubal_downsamp;
+% dim_without_buffer = size(sus);
+% dim = 2 * dim_without_buffer; %+ [0, 0, 128];
+% % Add a buffer
+% sus = padarray(sus, (dim - dim_without_buffer) / 2, sus(1, 1, 1));
+% padDim =  (dim - dim_without_buffer) / 2;
+% 
+% %% Variation calculation
+% % tic
+% dBz_obj_downsamp = FBFest(sus, zubal_sus_dist.image_res, dim, b0);
+% % toc
+% dBz_map_ppm_downsamp = real(dBz_obj.volume * 1e6); %TODO remove real ? Loss of the y-translation
+% 
+% %Truncate :
+% dBz_obj_downsamp.matrix = dim_without_buffer;
+% dBz_obj_downsamp.volume = dBz_obj_downsamp.volume( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3));
+% % Save NIFTI image of the field shift
+% dBz_obj_downsamp.save([dbz_path '_downsamp']);
+% 
+% %% Down sampling the true dbz map
+% dBz_obj.matrix = dBz_obj.matrix / 2;
+% dBz_obj.volume = dBz_obj.volume(1:2:end, 1:2:end, 1:2:end); % Down sampling the calculated field shift
+% 
+% %% Comparison
+% diff3 = abs(dBz_obj.volume - dBz_obj_downsamp.volume);
+% 
+% volume_gray = uint8(255*mat2gray(diff3));
+% montage(volume_gray);
+% title(sprintf('Absolute difference between 3D down-sampled field map (ppm) and Gaussian filtered with a STD 64x64x32'));
+% 
+% 
+% figure; imagesc(squeeze(real(dBz_obj.volume(:, :, 33)))); colorbar;
+% title('Section of the  3D down-sampled field map (ppm)')
+% 
+% figure; imagesc(squeeze(real(dBz_obj_downsamp.volume(:, :, 33)))); colorbar;
+% title('Section of Gaussian filtered with a STD 64x64x32 and down-sampled field map (ppm)')
+% 
+% figure; imagesc(squeeze(diff3(:, :, 33))); colorbar;
+% title('Section of the absolute difference between 3D down-sampled field map (ppm) and Gaussian filtered with a STD 64x64x32')
+% store_disp{1} = squeeze(real(dBz_obj.volume(:, :, 33)));
+% store_disp{2} = squeeze(real(dBz_obj_downsamp.volume(:, :, 33)));
+% store_disp{3} = squeeze(diff3(:, :, 33));
+% a = +imutils.displayExperiment(3, store_disp, [0], ...
+%     {'3D down-sampled field map (ppm)', 'Gaussian filtered with a STD 40x40x20 and down-sampled field map (ppm)', 'Difference'}, '', 'Section of the  3D down-sampled field map (ppm)');
+% 
+% % max de la difference : max(diff3, [], 'all') is 1.0001e-05
+% % mean de la difference : max(diff3, [], 'all') is 1.0921e-07
+% % mean of true ppm : mean(abs(dBz_obj.volume),'all') is 2.3895e-06
+% % mean of true ppm : mean(abs(dBz_obj_downsamp.volume),'all') is  2.3355e-06
+% %% Comparison with different sigma
+% sectionz = 50;
+% store_disp{1} = squeeze(real(dBz_obj.volume(:, :, sectionz)));
+% diff3 = abs(dBz_obj.volume - dBz_obj.volume);
+% store_disp{5} = squeeze(diff3(:, :, sectionz));
+% 
+% store_disp{2} = squeeze(real(vol_ds_323216(:, :, sectionz)));
+% diff3 = abs(dBz_obj.volume - vol_ds_323216);
+% store_disp{6} = squeeze(diff3(:, :, sectionz));
+% 
+% store_disp{3} = squeeze(real(vol_ds_646432(:, :, sectionz)));
+% diff3 = abs(dBz_obj.volume - vol_ds_646432);
+% store_disp{7} = squeeze(diff3(:, :, sectionz));
+% 
+% store_disp{4} = squeeze(real(vol_ds_12812864(:, :, sectionz)));
+% diff3 = abs(dBz_obj.volume - vol_ds_12812864);
+% store_disp{8} = squeeze(diff3(:, :, sectionz));
+% 
+% a = +imutils.displayExperiment(2, store_disp, [0, 0.5, 1, 2], ...
+%     {'Gaussian filtered down-sampled field map (ppm), STD (64x64x32)x', 'Difference'}, 'factor', 'Section of the  3D down-sampled field map (ppm)')
+% 
 
 %% Useful commands :
 
