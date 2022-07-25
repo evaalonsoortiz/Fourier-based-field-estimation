@@ -112,38 +112,6 @@
 % volume_gray = uint8(255*mat2gray(it_diffs_sec));
 % montage(volume_gray, 'Size', [5, 8])
 % 
-% 
-% figure;
-% volume_gray = uint8(255*mat2gray(glob_diffs_sec));
-% montage(volume_gray, 'Size', [5, 8])
-% title('Evolution of the difference between the calculated fields for increasing x, y and z-buffers on a section at x=129 and the result for the last (bigger) buffer')
-% 
-% %%
-% figure; 
-% subplot(1, 3, 1)
-% imagesc(squeeze(volumes_trunc{end-1}(xsection, :, :))); colorbar;
-% title('Field shift without a buffer')
-% subplot(1, 3, 2)
-% imagesc(squeeze(volumes_trunc{end}(xsection, :, :))); colorbar;
-% title('Field shift without a buffer xy256 and z512)')
-% subplot(1, 3, 3)
-% imagesc(abs(squeeze(volumes_trunc{end}(xsection, :, :))-squeeze(volumes_trunc{end-1}(xsection, :, :)))); colorbar;
-% title('Absolute difference')
-% sgtitle(sprintf('Field shifts for the section at x=%u', xsection))
-% 
-% %%
-% figure;
-% plot(z_dims, mean_value)
-% 
-% figure; 
-% yyaxis left
-% plot(z_dims, glob_diffs, '.-');
-% yyaxis right
-% plot(z_dims, mean_value, '.-')
-% legend('quadratic error with the last volume iterations', 'Mean value in the volume')
-% xlabel('Pixels added in the z direction')
-% ylabel('Quadratique error (ppm^2)')
-
 %% Calculation "outside" FBFest
 % tic
 %     %%---------------------------------------------------------------------- %%
@@ -280,17 +248,17 @@ zubal_filt = ifftshift(ifftn(ifftshift(zubal_filt_fft)));
 zubal_filt = zubal_filt(dim_pad + 1: end - dim_pad, dim_pad + 1: end - dim_pad, dim_pad + 1: end - dim_pad);
 
 figure; 
-volume_gray_filt = uint8(255*mat2gray(abs(zubal_filt)));
+volume_gray_filt = uint8(255*mat2gray(real(zubal_filt)));
 montage(volume_gray_filt); 
 title('Filtered susceptibility')
 
 figure; 
-volume_gray_filt = uint8(255*mat2gray(abs(sus)));
+volume_gray_filt = uint8(255*mat2gray(real(sus)));
 montage(volume_gray_filt); 
 title('Initial susceptibility')
 
 figure; 
-volume_gray_filt = uint8(255*mat2gray(abs(diff_ppm)));
+volume_gray_filt = uint8(255*mat2gray(abs(real(zubal_filt) - sus)));
 montage(volume_gray_filt); 
 title('Difference')
 %% Experiment 2 : Comparing calculation between the initial susceptibility and the filtered one
@@ -314,7 +282,7 @@ title('Field shift calculated on initial susceptibility')
 figure; 
 volume_gray_filt = uint8(255*mat2gray(abs(dBz_map_ppm_filt - dBz_map_ppm)));
 montage(volume_gray_filt); 
-title('Difference')
+title('Difference between the field shift on the filtered susceptibilityand the initial one')
 %%
 figure; 
 subplot(1, 3, 1)
