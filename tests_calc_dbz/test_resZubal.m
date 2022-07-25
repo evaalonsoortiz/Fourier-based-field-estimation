@@ -15,111 +15,111 @@ zubal_sus_dist = Zubal('zubal_EAO.nii');
 sus_nii = make_nii(zubal_sus_dist.volume);
 save_nii(sus_nii, 'sus_zubal_EAO.nii')
 
-n = 80;
-z_dims = 2 * ceil(linspace(0, 256, n)); % Be sure to have even and integers values
-xy_dims = 2 * ceil(linspace(0, 0, n)); % Be sure to have even and integers values
-
 dim_without_buffer = zubal_sus_dist.matrix;
 
-% Measures
-it_diffs = zeros(1, n); % store the iterative quadratique differences
-zsection = 65;
-xsection = 129;
-it_diffs_sec = zeros(256, 128, n-1);
-glob_diffs = zeros(1, n); %store the quadratique differences with the last 'better' calc
-glob_diffs_sec = zeros(256, 128, n);
-volumes_trunc = cell(1, n); % store the fields shift (ppm)
-temps = zeros(1, n);
-mean_value = zeros(1, n);
+n = 40;
+z_dims = 2 * ceil(linspace(0, 256, n)); % Be sure to have even and integers values
+xy_dims = 2 * ceil(linspace(0, 128, n)); % Be sure to have even and integers values
 
-best = bestz512;
-
-for zi = 1:n 
-    disp(z_dims(zi))
-    
-    sus = zubal_sus_dist.volume;
-    
-    dim = dim_without_buffer + [0, xy_dims(zi), z_dims(zi)];
-    % Add a buffer
-    sus = padarray(sus, (dim - dim_without_buffer) / 2, sus(1, 1, 1), 'post');
-    sus = padarray(sus, (dim - dim_without_buffer) / 2, sus(1, 1, 1), 'pre');
-    padDim =  (dim - dim_without_buffer) / 2;
-
-
-    %% Variation calculation
-    % tic
-    t0 = cputime;
-    dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, b0);
-    t1 = cputime;
-
-    %Truncate :
-    dBz_obj.matrix = dim_without_buffer;
-    dBz_obj.volume = dBz_obj.volume( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3));
-    % Save NIFTI image of the field shift
-    dBz_obj.save(sprintf('%s_y%u_z%u', dbz_path, xy_dims(zi), z_dims(zi)));
-    dBz_map_ppm = real(dBz_obj.volume * 1e6); %TODO remove real ? Loss of the y-translation
-    
-    volumes_trunc{zi} = dBz_map_ppm;
-    temps(zi) = t1-t0;
-    
-    if (zi > 1)
-        it_diffs(zi) = sum((dBz_map_ppm - volumes_trunc{zi - 1}) .^2, 'all')/prod(dim_without_buffer);
-        it_diffs_sec(:, :, zi-1) = squeeze((dBz_map_ppm(xsection, :, :) - volumes_trunc{zi - 1}(xsection, :, :)) .^2);
-    else
-        it_diffs(1) = sum((dBz_map_ppm - zeros(dim_without_buffer)) .^2, 'all')/prod(dim_without_buffer);
-    end
-    
-    glob_diffs(zi) =  sum((dBz_map_ppm - best) .^2, 'all')/prod(dim_without_buffer);
-    glob_diffs_sec(:, :, zi) = squeeze((dBz_map_ppm(xsection, :, :) - best(xsection, :, :)) .^2);
-    
-    mean_value(zi) = mean(dBz_map_ppm(:));
-
-end
-%%
-figure; plot(xy_dims, it_diffs, '.-');
-hold on 
-plot(xy_dims, glob_diffs, '.-');
-hold off
-legend('Between succesive iterations', 'Between the current calculation and the last (512)')
-xlabel('Pixels added in the z direction')
-ylabel('Quadratique error (ppm^2)')
-title('Mean of the quadratic errors while the dimension of the z-buffer increases')
-
-figure;
-volume_gray = uint8(255*mat2gray(it_diffs_sec));
-montage(volume_gray, 'Size', [5, 8])
-
-
-figure;
-volume_gray = uint8(255*mat2gray(glob_diffs_sec));
-montage(volume_gray, 'Size', [5, 8])
-title('Evolution of the difference between the calculated fields for increasing z-buffers on a section at x=129 and the result for the last (bigger) buffer')
-
-%%
-figure; 
-subplot(1, 3, 1)
-imagesc(squeeze(volumes_trunc{end-1}(xsection, :, :))); colorbar;
-title('Field shift without a buffer')
-subplot(1, 3, 2)
-imagesc(squeeze(volumes_trunc{end}(xsection, :, :))); colorbar;
-title('Field shift without a y buffer of 512')
-subplot(1, 3, 3)
-imagesc(abs(squeeze(volumes_trunc{77}(xsection, :, :))-squeeze(volumes_trunc{78}(xsection, :, :)))); colorbar;
-title('Absolute difference')
-sgtitle(sprintf('Field shifts fot the section at x=%u', xsection))
-
-%%
-figure;
-plot(z_dims, mean_value)
-
-figure; 
-yyaxis left
-plot(z_dims, glob_diffs, '.-');
-yyaxis right
-plot(z_dims, mean_value, '.-')
-legend('quadratic error with the last volume iterations', 'Mean value in the volume')
-xlabel('Pixels added in the z direction')
-ylabel('Quadratique error (ppm^2)')
+% % Measures
+% it_diffs = zeros(1, n); % store the iterative quadratique differences
+% zsection = 65;
+% xsection = 129;
+% it_diffs_sec = zeros(256, 128, n-1);
+% glob_diffs = zeros(1, n); %store the quadratique differences with the last 'better' calc
+% glob_diffs_sec = zeros(256, 128, n);
+% volumes_trunc = cell(1, n); % store the fields shift (ppm)
+% temps = zeros(1, n);
+% mean_value = zeros(1, n);
+% 
+% best = bestxy256_z512;
+% 
+% for zi = 1:n 
+%     disp(z_dims(zi))
+%     
+%     sus = zubal_sus_dist.volume;
+%     
+%     dim = dim_without_buffer + [xy_dims(zi), xy_dims(zi), z_dims(zi)];
+%     % Add a buffer
+%     sus = padarray(sus, (dim - dim_without_buffer) / 2, sus(1, 1, 1), 'post');
+%     sus = padarray(sus, (dim - dim_without_buffer) / 2, sus(1, 1, 1), 'pre');
+%     padDim =  (dim - dim_without_buffer) / 2;
+% 
+% 
+%     %% Variation calculation
+%     % tic
+%     t0 = cputime;
+%     dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, b0);
+%     t1 = cputime;
+% 
+%     %Truncate :
+%     dBz_obj.matrix = dim_without_buffer;
+%     dBz_obj.volume = dBz_obj.volume( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3));
+%     % Save NIFTI image of the field shift
+%     dBz_obj.save(sprintf('%s_y%u_z%u', dbz_path, xy_dims(zi), z_dims(zi)));
+%     dBz_map_ppm = real(dBz_obj.volume * 1e6); %TODO remove real ? Loss of the y-translation
+%     
+%     volumes_trunc{zi} = dBz_map_ppm;
+%     temps(zi) = t1-t0;
+%     
+%     if (zi > 1)
+%         it_diffs(zi) = sum((dBz_map_ppm - volumes_trunc{zi - 1}) .^2, 'all')/prod(dim_without_buffer);
+%         it_diffs_sec(:, :, zi-1) = squeeze((dBz_map_ppm(xsection, :, :) - volumes_trunc{zi - 1}(xsection, :, :)) .^2);
+%     else
+%         it_diffs(1) = sum((dBz_map_ppm - zeros(dim_without_buffer)) .^2, 'all')/prod(dim_without_buffer);
+%     end
+%     
+%     glob_diffs(zi) =  sum((dBz_map_ppm - best) .^2, 'all')/prod(dim_without_buffer);
+%     glob_diffs_sec(:, :, zi) = squeeze((dBz_map_ppm(xsection, :, :) - best(xsection, :, :)) .^2);
+%     
+%     mean_value(zi) = mean(dBz_map_ppm(:));
+% 
+% end
+% %%
+% figure; plot(z_dims, it_diffs, '.-');
+% hold on 
+% plot(z_dims, glob_diffs, '.-');
+% hold off
+% legend('Between successive iterations', 'Between the current calculation and the last (xy256 z 512)')
+% xlabel('Pixels added in the z direction')
+% ylabel('Quadratique error (ppm^2)')
+% title('Mean of the quadratic errors while the dimension of the x, y and z-buffer increases')
+% 
+% figure;
+% volume_gray = uint8(255*mat2gray(it_diffs_sec));
+% montage(volume_gray, 'Size', [5, 8])
+% 
+% 
+% figure;
+% volume_gray = uint8(255*mat2gray(glob_diffs_sec));
+% montage(volume_gray, 'Size', [5, 8])
+% title('Evolution of the difference between the calculated fields for increasing x, y and z-buffers on a section at x=129 and the result for the last (bigger) buffer')
+% 
+% %%
+% figure; 
+% subplot(1, 3, 1)
+% imagesc(squeeze(volumes_trunc{end-1}(xsection, :, :))); colorbar;
+% title('Field shift without a buffer')
+% subplot(1, 3, 2)
+% imagesc(squeeze(volumes_trunc{end}(xsection, :, :))); colorbar;
+% title('Field shift without a buffer xy256 and z512)')
+% subplot(1, 3, 3)
+% imagesc(abs(squeeze(volumes_trunc{end}(xsection, :, :))-squeeze(volumes_trunc{end-1}(xsection, :, :)))); colorbar;
+% title('Absolute difference')
+% sgtitle(sprintf('Field shifts for the section at x=%u', xsection))
+% 
+% %%
+% figure;
+% plot(z_dims, mean_value)
+% 
+% figure; 
+% yyaxis left
+% plot(z_dims, glob_diffs, '.-');
+% yyaxis right
+% plot(z_dims, mean_value, '.-')
+% legend('quadratic error with the last volume iterations', 'Mean value in the volume')
+% xlabel('Pixels added in the z direction')
+% ylabel('Quadratique error (ppm^2)')
 
 %%
 % tic
