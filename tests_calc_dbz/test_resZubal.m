@@ -230,37 +230,39 @@ dim_pad = 2; % dim_pad pixels will be added in each direction
 %sigma = [128, 128, 64];
 zsection =  dim(3) / 2 + 1;
 xsection = dim(1) / 2 + 1;
-sigma = [64, 64, 32];
+sigma = [128, 128, 64];
 
-[kx, ky, kz] = ndgrid(-dim(1)/2 - dim_pad + 1:dim(1)/2 + dim_pad, -dim(2)/2 - dim_pad + 1:dim(2)/2 + dim_pad, -dim(3)/2 - dim_pad + 1:dim(3)/2 + dim_pad);
-gauss_3D = gaussmf(kx, [sigma(1), 0]) .* gaussmf(ky, [sigma(2), 0]) .* gaussmf(kz, [sigma(3), 0]);
-
+% [kx, ky, kz] = ndgrid(-dim(1)/2 - dim_pad + 1:dim(1)/2 + dim_pad, -dim(2)/2 - dim_pad + 1:dim(2)/2 + dim_pad, -dim(3)/2 - dim_pad + 1:dim(3)/2 + dim_pad);
+% gauss_3D = gaussmf(kx, [sigma(1), 0]) .* gaussmf(ky, [sigma(2), 0]) .* gaussmf(kz, [sigma(3), 0]);
+% 
 % figure; imagesc(squeeze(gauss_3D(:, :, zsection))); colorbar; title('3D gaussian visualisation');
 % volume_gray = uint8(255*mat2gray(gauss_3D));
 % figure; montage(volume_gray); title('3D gaussian visualisation bis')
 % figure; imagesc(squeeze(abs(ifftshift(ifftn(ifftshift(gauss_3D(:, :, 64))))))); colorbar; title('ifft of the 3D gaussian');
 
-% Zubal FFT and filtering
-zubal_fft = fftshift(fftn(fftshift(padarray(zubal_sus_dist.volume, [dim_pad dim_pad dim_pad], zubal_sus_dist.volume(1, 1, 1), 'symmetric'))));
-zubal_filt_fft = zubal_fft .* gauss_3D;
-zubal_filt = ifftshift(ifftn(ifftshift(zubal_filt_fft)));
+% % Zubal FFT and filtering
+% zubal_fft = fftshift(fftn(fftshift(padarray(zubal_sus_dist.volume, [dim_pad dim_pad dim_pad], zubal_sus_dist.volume(1, 1, 1), 'symmetric'))));
+% zubal_filt_fft = zubal_fft .* gauss_3D;
+% zubal_filt = ifftshift(ifftn(ifftshift(zubal_filt_fft)));
+% 
+% zubal_filt = zubal_filt(dim_pad + 1: end - dim_pad, dim_pad + 1: end - dim_pad, dim_pad + 1: end - dim_pad);
+% 
+% figure; 
+% volume_gray_filt = uint8(255*mat2gray(real(zubal_filt)));
+% montage(volume_gray_filt); 
+% title('Filtered susceptibility')
+% 
+% figure; 
+% volume_gray_filt = uint8(255*mat2gray(real(sus)));
+% montage(volume_gray_filt); 
+% title('Initial susceptibility')
+% 
+% figure; 
+% volume_gray_filt = uint8(255*mat2gray(abs(real(zubal_filt) - sus)));
+% montage(volume_gray_filt); 
+% title('Difference')
 
-zubal_filt = zubal_filt(dim_pad + 1: end - dim_pad, dim_pad + 1: end - dim_pad, dim_pad + 1: end - dim_pad);
-
-figure; 
-volume_gray_filt = uint8(255*mat2gray(real(zubal_filt)));
-montage(volume_gray_filt); 
-title('Filtered susceptibility')
-
-figure; 
-volume_gray_filt = uint8(255*mat2gray(real(sus)));
-montage(volume_gray_filt); 
-title('Initial susceptibility')
-
-figure; 
-volume_gray_filt = uint8(255*mat2gray(abs(real(zubal_filt) - sus)));
-montage(volume_gray_filt); 
-title('Difference')
+zubal_filt = sub_sample_3D(zubal_sus_dist.volume, 2);
 %% Experiment 2 : Comparing calculation between the initial susceptibility and the filtered one
 
 dBz_obj_filt = FBFest(zubal_filt, zubal_sus_dist.image_res, dim, b0);
