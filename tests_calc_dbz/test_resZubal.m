@@ -227,10 +227,10 @@ sus = padarray(sus, padDim, sus(1, 1, 1));
 %% Filtering in frequency domain using gaussmf
 
 dim_pad = 2; % dim_pad pixels will be added in each direction
-sigma = [128, 128, 64];
+%sigma = [128, 128, 64];
 zsection =  dim(3) / 2 + 1;
 xsection = dim(1) / 2 + 1;
-% sigma = [64, 64, 32];
+sigma = [64, 64, 32];
 
 [kx, ky, kz] = ndgrid(-dim(1)/2 - dim_pad + 1:dim(1)/2 + dim_pad, -dim(2)/2 - dim_pad + 1:dim(2)/2 + dim_pad, -dim(3)/2 - dim_pad + 1:dim(3)/2 + dim_pad);
 gauss_3D = gaussmf(kx, [sigma(1), 0]) .* gaussmf(ky, [sigma(2), 0]) .* gaussmf(kz, [sigma(3), 0]);
@@ -294,9 +294,17 @@ title('Field shift on the filtered susceptibility')
 subplot(1, 3, 3)
 imagesc(abs(squeeze(dBz_map_ppm(xsection, :, :))-squeeze(dBz_map_ppm_filt(xsection, :, :)))); colorbar;
 title('Absolute difference')
-sgtitle(sprintf('Field shifts for the section at x=%u', xsection))
+sgtitle(sprintf('Field shifts (ppm) for the section at x=%u', xsection))
 
+figure;
+imagesc((squeeze(dBz_map_ppm(xsection, :, :))-squeeze(dBz_map_ppm_filt(xsection, :, :))) ./ squeeze(dBz_map_ppm(xsection, :, :)))
+colorbar;
+relativeError = (abs(dBz_map_ppm(:)-(dBz_map_ppm_filt(:))) ./ abs(dBz_map_ppm(:)));
+error = abs(dBz_map_ppm(:)-dBz_map_ppm_filt(:));
+sqrt(sum(((dBz_map_ppm(:))-(dBz_map_ppm_filt(:))).^2) / prod(dim))
 
+figure;
+histogram(abs((dBz_map_ppm(:))-(dBz_map_ppm_filt(:))))
 
 %% Down-sampling and real part
 zubal_downsamp = real(zubal_filt(1:2:end, 1:2:end, 1:2:end));
