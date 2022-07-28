@@ -2,3 +2,4 @@
 *.m~
 *.DS_Store
 *.mat
+*.nii

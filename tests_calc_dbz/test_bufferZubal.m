@@ -18,11 +18,11 @@ zubal_sus_dist = Zubal('zubal_EAO.nii');
 
 dim_without_buffer = zubal_sus_dist.matrix;
 sus = zubal_sus_dist.volume;
-sus(sus == sus(1, 1, 1)) = 0;
+sus(sus == sus(1, 1, 1)) = sus(1,1,1);
 
 fprintf('Check if the susceptibility %0.4e is the external susceptibility.\n', sus(1, 1, 1))
 %sus_ext = sus(1, 1, 1);
-sus_ext = 0; % Test 0
+sus_ext = sus(1,1,1); % Test 0
 dim = 1 * dim_without_buffer;
 % Add a buffer
 padDim =  (dim - dim_without_buffer) / 2;
@@ -62,7 +62,7 @@ mean_value = zeros(1, n);
 temps = zeros(1, n);
 
 % best = zeros(dim_without_buffer);
-best = best_y512_0; % HERE
+best = best_y512_air_Without_Corr; % HERE
 
 for zi = 1:n 
     disp(z_dims(zi))
