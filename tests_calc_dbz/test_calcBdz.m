@@ -137,7 +137,7 @@ tic
     % susceptibility is equal to the susceptibility on the origin
     % corner of the matrix.
     bdzFFT = b0 * (1/3 - k_scaling_coeff).*FT_chi;
-    bdzFFT(k2 == 0) = - b0 * sus(1, 1, 1) * prod(dim) / 3;
+    bdzFFT(k2 == 0) = b0 * sus(1, 1, 1) * prod(dim) / 3;
     dbz_volume = ifftshift(ifftn(ifftshift(bdzFFT)));
 toc
 

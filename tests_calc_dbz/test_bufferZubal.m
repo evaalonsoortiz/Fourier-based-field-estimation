@@ -47,7 +47,7 @@ sus = padarray(sus, padDim, sus_ext);
 
 n = 40;
 z_dims = 2 * ceil(linspace(0, 256, n)); % Be sure to have even and integer values
-xy_dims = 2 * ceil(linspace(0, 256, n)); % Be sure to have even and integer values
+xy_dims = 2 * ceil(linspace(128, 128, n)); % Be sure to have even and integer values
 
 %% Measures
 it_diffs = zeros(1, n); % store the iterative quadratique differences
@@ -57,20 +57,24 @@ xsection = 129;
 it_diffs_sec = zeros(256, 128, n);
 glob_diffs_sec = zeros(256, 128, n);
 volumes_trunc = cell(1, n); % store the fields shift (ppm)
+volumes_not_trunc = cell(1, n);
+glob_diffs_sec_notTrunc = cell(1, n);
 mean_value = zeros(1, n);
 
 temps = zeros(1, n);
 
-% best = zeros(dim_without_buffer);
-best = best_y512_air_Without_Corr; % HERE
+%best = zeros(dim_without_buffer);
+%best = best_y512_air_Corr; % HERE
+best = best_xy256_z512_air_Corr; % HERE
 
 for zi = 1:n 
     disp(z_dims(zi))
     
     sus = zubal_sus_dist.volume;
     
-    dim = dim_without_buffer + [0, xy_dims(zi), 0];
-%    dim = dim_without_buffer + [0, 0, z_dims(zi)];
+     % dim = dim_without_buffer + [xy_dims(zi), xy_dims(zi), z_dims(zi)];
+     % dim = dim_without_buffer + [xy_dims(zi), 0, 0];
+     dim = dim_without_buffer + [256, 256, z_dims(zi)];
 
     % Add a buffer
     padDim =  (dim - dim_without_buffer) / 2;
@@ -81,7 +85,11 @@ for zi = 1:n
     t0 = cputime;
     dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, b0);
     t1 = cputime;
-
+    if (zi == 3 || zi==4 || zi==2 || zi==n)
+        volumes_not_trunc{zi} = real(dBz_obj.volume * 1e6);
+        glob_diffs_sec_notTrunc{zi} =  squeeze(real(dBz_obj.volume(xsection, :, :) * 1e6));
+        glob_diffs_sec_notTrunc{zi}(padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3)) = (glob_diffs_sec_notTrunc{zi}(padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3)) - squeeze(best(xsection, :, :))) .^2;
+    end
     %Truncate :
     dBz_obj.matrix = dim_without_buffer;
     dBz_obj.volume = dBz_obj.volume( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3));
@@ -104,14 +112,14 @@ for zi = 1:n
 
 end
 %%
-figure; plot(xy_dims(2:end), it_diffs(2:end), '.-'); %HERE
+figure; plot(z_dims(2:end), it_diffs(2:end), '.-'); %HERE
 hold on 
-plot(xy_dims, glob_diffs, '.-'); %HERE
+plot(z_dims, glob_diffs, '.-'); %HERE
 hold off
-legend('Between successive iterations', 'Between the current calculation and the last (y512)') %HERE
-xlabel('Pixels added in the y direction') %HERE
+legend('Between successive iterations', 'Between the current calculation and the last (xy256 z512)') %HERE
+xlabel('Pixels added in the z direction') %HERE
 ylabel('Quadratic error (ppm^2)')
-title('Mean of the quadratic errors while the dimension of the y-buffer increases') %HERE
+title('Mean of the quadratic errors while the dimension of the z-buffer increases and x and y buffers are large') %HERE
 %title('Mean of the quadratic errors while the dimension of the x, y and z-buffer increases')
 
 % figure;
@@ -120,16 +128,54 @@ title('Mean of the quadratic errors while the dimension of the y-buffer increase
 
 figure;
 yyaxis left
-plot(xy_dims, glob_diffs, '.-');
+plot(z_dims, glob_diffs, '.-');
 ylabel('Quadratic difference (ppm^2)') %HERE
 yyaxis right
-plot(xy_dims, mean_value, '.-');
+plot(z_dims, mean_value, '.-');
 ylabel('Mean value in the volume (ppm)')
-xlabel('Pixels added in the y direction') %HERE
-legend('Quadratic difference between current and last iteration (y512)', 'Mean value in the volume')
-title('Quadratic difference and mean value while the y buffer is increasing') %HERE
+xlabel('Pixels added in the x direction') %HERE
+legend('Quadratic difference between current and last iteration (xy256 z512)', 'Mean value in the volume')
+title('Quadratic difference and mean value while the z-buffer increases and x and y buffers are large') %HERE
 
-% %% Calculation "outside" FBFest
+%% 
+
+% figure; 
+% subplot(2, 4, 1);
+% imagesc(squeeze(volumes_not_trunc{2}(xsection, :, :))); colorbar;
+% subplot(2, 4, 2);
+% imagesc(squeeze(volumes_not_trunc{3}(xsection, :, :))); colorbar;
+% subplot(2, 4, 3);
+% imagesc(squeeze(volumes_not_trunc{4}(xsection, :, :))); colorbar;
+% subplot(2, 4, 4);
+% imagesc(squeeze(volumes_not_trunc{end}(xsection, :, :))); colorbar;
+% 
+% subplot(2, 4, 5);
+% imagesc(squeeze(glob_diffs_sec_notTrunc{2})); colorbar;
+% subplot(2, 4, 6);
+% imagesc(squeeze(glob_diffs_sec_notTrunc{3})); colorbar;
+% subplot(2, 4, 7);
+% imagesc(squeeze(glob_diffs_sec_notTrunc{4})); colorbar;
+% subplot(2, 4, 8);
+% imagesc(squeeze(glob_diffs_sec_notTrunc{end})); colorbar;
+
+% %%
+% 
+% s3 = size(volumes_not_trunc{3});
+% repet3 = repmat(volumes_not_trunc{3}, 3, 3, 3);
+% %%
+% figure;
+% imagesc(squeeze(repet3(s3(1) + xsection, :, :))); colorbar;
+% title('Field shift (ppm) with a z-buffer of 28 voxels at a xsection ')
+% %%
+% 
+% sn = size(volumes_not_trunc{end});
+% repetn = repmat(volumes_not_trunc{end}, 3, 3, 3);
+% %%
+% figure;
+% imagesc(squeeze(repetn(sn(1) + xsection, :, :))); colorbar;
+% title('Field shift (ppm) with a z-buffer of 512 voxels at a xsection ')
+
+%% Calculation "outside" FBFest
 % tic
 %     %%---------------------------------------------------------------------- %%
 %     %% Define constants
