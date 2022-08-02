@@ -5,7 +5,7 @@
 
 %clearvars;
 
-phantom = "sphere"
+phantom = "rect"
 switch(phantom)
 %%  An anisotropic rectangular susceptibility in a "little" volume
     case "rect" 
@@ -14,7 +14,8 @@ switch(phantom)
         susin = 1;
         susout = 0;
         sus = zeros(dim) + susout;
-        sus(7:10, 8:9, 6:11) = susin;
+        %sus(7:10, 8:9, 6:11) = susin;
+        
         
 %% A sphere
     case "sphere"

@@ -6,16 +6,18 @@ classdef FBFest < handle
         volume
         sus % USI (not ppm)
         type
+        sus_ext % USI (not ppm)
         b0 % [T]
     end
     
     methods
-        function obj = FBFest( sus, image_res, matrix, b0, varargin )
+        function obj = FBFest( sus, image_res, matrix, sus_ext, b0, varargin )
             % Method FBFest (constructor)
             obj.matrix  = matrix ;
             obj.image_res  = image_res ;
             obj.sus  = sus ;
             obj.b0 = b0 ;
+            obj.sus_ext = sus_ext;
             
             if nargin > 3
                 obj.type = varargin;
@@ -54,7 +56,7 @@ classdef FBFest < handle
             % susceptibility is equal to the susceptibility on the origin
             % corner of the matrix.
             bdzFFT = obj.b0 * (1/3 - k_scaling_coeff).*FT_chi;
-            bdzFFT(k2 == 0) = obj.b0 * obj.sus(1, 1, 1) * prod(obj.matrix) / 3;
+            bdzFFT(k2 == 0) = obj.b0 * obj.sus_ext * prod(obj.matrix) / 3;
             obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
             
         end

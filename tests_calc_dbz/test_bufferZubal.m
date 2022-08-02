@@ -19,15 +19,16 @@ zubal_sus_dist = Zubal('zubal_EAO.nii');
 dim_without_buffer = zubal_sus_dist.matrix;
 sus = zubal_sus_dist.volume;
 sus(sus == sus(1, 1, 1)) = sus(1,1,1);
+sus_ext = sus(1,1,1);
+sus = sus - sus(1, 1, 1);
 
-fprintf('Check if the susceptibility %0.4e is the external susceptibility.\n', sus(1, 1, 1))
-%sus_ext = sus(1, 1, 1);
-sus_ext = sus(1,1,1); % Test 0
-dim = 1 * dim_without_buffer;
+fprintf('Check if the susceptibility %0.4e is the external susceptibility.\n', sus_ext)
+% dim = 1 * dim_without_buffer;
 % Add a buffer
-padDim =  (dim - dim_without_buffer) / 2;
-sus = padarray(sus, padDim, sus_ext);
+% padDim =  (dim - dim_without_buffer) / 2;
+% sus = padarray(sus, padDim, sus_ext);
 
+zubal_sus_dist.volume = sus;
 
 %% Variation calculation "template"
 % % tic
@@ -61,11 +62,12 @@ volumes_not_trunc = cell(1, n);
 glob_diffs_sec_notTrunc = cell(1, n);
 mean_value = zeros(1, n);
 
-temps = zeros(1, n);
+time = zeros(1, n);
 
 %best = zeros(dim_without_buffer);
 %best = best_y512_air_Corr; % HERE
-best = best_xy256_z512_air_Corr; % HERE
+%best = best_xy256_z512_air_Corr; % HERE
+best = best_z512_minusSusAir_susextAir;
 
 for zi = 1:n 
     disp(z_dims(zi))
@@ -74,7 +76,7 @@ for zi = 1:n
     
      % dim = dim_without_buffer + [xy_dims(zi), xy_dims(zi), z_dims(zi)];
      % dim = dim_without_buffer + [xy_dims(zi), 0, 0];
-     dim = dim_without_buffer + [256, 256, z_dims(zi)];
+     dim = dim_without_buffer + [0, 0, z_dims(zi)];
 
     % Add a buffer
     padDim =  (dim - dim_without_buffer) / 2;
@@ -83,7 +85,7 @@ for zi = 1:n
     %% Variation calculation
     % tic
     t0 = cputime;
-    dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, b0);
+    dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, sus_ext, b0);
     t1 = cputime;
     if (zi == 3 || zi==4 || zi==2 || zi==n)
         volumes_not_trunc{zi} = real(dBz_obj.volume * 1e6);
@@ -98,7 +100,7 @@ for zi = 1:n
     dBz_map_ppm = real(dBz_obj.volume * 1e6); %TODO remove real ? Loss of the y-translation
     
     volumes_trunc{zi} = dBz_map_ppm;
-    temps(zi) = t1-t0;
+    time(zi) = t1-t0;
     
     if (zi > 1)
         it_diffs(zi) = sum((dBz_map_ppm - volumes_trunc{zi - 1}).^2, 'all') / prod(dim_without_buffer);
@@ -112,15 +114,24 @@ for zi = 1:n
 
 end
 %%
+yyaxis left
 figure; plot(z_dims(2:end), it_diffs(2:end), '.-'); %HERE
 hold on 
 plot(z_dims, glob_diffs, '.-'); %HERE
-hold off
-legend('Between successive iterations', 'Between the current calculation and the last (xy256 z512)') %HERE
-xlabel('Pixels added in the z direction') %HERE
 ylabel('Quadratic error (ppm^2)')
+hold on
+yyaxis right
+plot(z_dims, time);
+ylabel('time (ms)')
+hold off
+legend('Between successive iterations', 'Between the current calculation and the last (z512)', 'execution time (ms)') %HERE
+xlabel('Pixels added in the z direction') %HERE
+grid on
+grid minor
 title('Mean of the quadratic errors while the dimension of the z-buffer increases and x and y buffers are large') %HERE
 %title('Mean of the quadratic errors while the dimension of the x, y and z-buffer increases')
+
+
 
 % figure;
 % volume_gray = uint8(255*mat2gray(it_diffs_sec));
@@ -136,6 +147,11 @@ ylabel('Mean value in the volume (ppm)')
 xlabel('Pixels added in the x direction') %HERE
 legend('Quadratic difference between current and last iteration (xy256 z512)', 'Mean value in the volume')
 title('Quadratic difference and mean value while the z-buffer increases and x and y buffers are large') %HERE
+
+%%
+figure;
+plot(z_dims, time);
+
 
 %% 
 
