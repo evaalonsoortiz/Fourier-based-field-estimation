@@ -20,8 +20,8 @@ dim_without_buffer = zubal_sus_dist.matrix;
 sus = zubal_sus_dist.volume;
 sus(sus == sus(1, 1, 1)) = sus(1,1,1);
 sus_ext = sus(1,1,1);
-sus_pad = 0;
-sus = sus - sus(1, 1, 1);
+sus_pad = sus(1,1,1);
+%sus = sus - sus(1, 1, 1);
 
 fprintf('Check if the susceptibility %0.4e is the external susceptibility.\n', sus_ext)
 % dim = 1 * dim_without_buffer;
@@ -65,10 +65,10 @@ mean_value = zeros(1, n);
 
 time = zeros(1, n);
 
-% best = zeros(dim_without_buffer);
+best = zeros(dim_without_buffer);
 %best = best_y512_air_Corr; % HERE
 %best = best_z512; % HERE
-best = best_z512_minusSusAir_susext0;
+%best = best_z512_minusSusAir_susext0;
 
 for zi = 1:n 
     disp(z_dims(zi))
@@ -83,15 +83,12 @@ for zi = 1:n
     padDim =  (dim - dim_without_buffer) / 2;
     sus = padarray(sus, padDim, sus_pad);
     
-    figure;
-    imagesc(squeeze(sus(xsection, :, :))); colorbar; title(sprintf('susceptibility for a buffer of %u', z_dims(zi)))
-
     %% Variation calculation
     % tic
     t0 = cputime;
     dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, sus_ext, b0);
     t1 = cputime;
-    TF_sus = fftshift(fftn(fftshift(sus)));
+%   TF_sus = fftshift(fftn(fftshift(sus)));
 %     
 %     if (zi == 3 || zi==4 || zi==2 || zi==n)
 %         volumes_not_trunc{zi} = real(dBz_obj.volume * 1e6);
