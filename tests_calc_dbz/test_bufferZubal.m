@@ -20,6 +20,7 @@ dim_without_buffer = zubal_sus_dist.matrix;
 sus = zubal_sus_dist.volume;
 sus(sus == sus(1, 1, 1)) = sus(1,1,1);
 sus_ext = sus(1,1,1);
+sus_pad = 0;
 sus = sus - sus(1, 1, 1);
 
 fprintf('Check if the susceptibility %0.4e is the external susceptibility.\n', sus_ext)
@@ -46,9 +47,9 @@ zubal_sus_dist.volume = sus;
     
 %% Experiment 1 : Variation calculation with different buffers
 
-n = 40;
-z_dims = 2 * ceil(linspace(0, 256, n)); % Be sure to have even and integer values
-xy_dims = 2 * ceil(linspace(128, 128, n)); % Be sure to have even and integer values
+n = 1;
+z_dims = (2 * ceil(linspace(256, 256, n))); % Be sure to have even and integer values
+xy_dims = (2 * ceil(linspace(128, 128, n))); % Be sure to have even and integer values
 
 %% Measures
 it_diffs = zeros(1, n); % store the iterative quadratique differences
@@ -64,10 +65,10 @@ mean_value = zeros(1, n);
 
 time = zeros(1, n);
 
-%best = zeros(dim_without_buffer);
+% best = zeros(dim_without_buffer);
 %best = best_y512_air_Corr; % HERE
-%best = best_xy256_z512_air_Corr; % HERE
-best = best_z512_minusSusAir_susextAir;
+%best = best_z512; % HERE
+best = best_z512_minusSusAir_susext0;
 
 for zi = 1:n 
     disp(z_dims(zi))
@@ -80,18 +81,23 @@ for zi = 1:n
 
     % Add a buffer
     padDim =  (dim - dim_without_buffer) / 2;
-    sus = padarray(sus, padDim, sus_ext);
+    sus = padarray(sus, padDim, sus_pad);
+    
+    figure;
+    imagesc(squeeze(sus(xsection, :, :))); colorbar; title(sprintf('susceptibility for a buffer of %u', z_dims(zi)))
 
     %% Variation calculation
     % tic
     t0 = cputime;
     dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, sus_ext, b0);
     t1 = cputime;
-    if (zi == 3 || zi==4 || zi==2 || zi==n)
-        volumes_not_trunc{zi} = real(dBz_obj.volume * 1e6);
-        glob_diffs_sec_notTrunc{zi} =  squeeze(real(dBz_obj.volume(xsection, :, :) * 1e6));
-        glob_diffs_sec_notTrunc{zi}(padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3)) = (glob_diffs_sec_notTrunc{zi}(padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3)) - squeeze(best(xsection, :, :))) .^2;
-    end
+    TF_sus = fftshift(fftn(fftshift(sus)));
+%     
+%     if (zi == 3 || zi==4 || zi==2 || zi==n)
+%         volumes_not_trunc{zi} = real(dBz_obj.volume * 1e6);
+%         glob_diffs_sec_notTrunc{zi} =  squeeze(real(dBz_obj.volume(xsection, :, :) * 1e6));
+%         glob_diffs_sec_notTrunc{zi}(padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3)) = (glob_diffs_sec_notTrunc{zi}(padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3)) - squeeze(best(xsection, :, :))) .^2;
+%     end
     %Truncate :
     dBz_obj.matrix = dim_without_buffer;
     dBz_obj.volume = dBz_obj.volume( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3));
@@ -147,11 +153,30 @@ ylabel('Mean value in the volume (ppm)')
 xlabel('Pixels added in the x direction') %HERE
 legend('Quadratic difference between current and last iteration (xy256 z512)', 'Mean value in the volume')
 title('Quadratic difference and mean value while the z-buffer increases and x and y buffers are large') %HERE
+grid on
+grid minor
 
 %%
 figure;
-plot(z_dims, time);
+imagesc(squeeze(best_z512_susextAir(xsection, :, :) - best_z512_minusSusAir_susextAir(xsection, :, :))); colorbar;
 
+% 
+% figure;
+% imagesc(squeeze(abs(TF_sus_z512susextAir_0(xsection, :, :)))); colorbar;
+% figure;
+% imagesc(squeeze(abs(TF_sus_z512susextAir_minus_0(xsection, :, :)))); colorbar;
+% figure;
+% imagesc(squeeze(abs(TF_sus_z512susextAir_minus_0(xsection, :, :))- abs(TF_sus_z512susextAir_0(xsection, :, :)))); colorbar;
+% 
+% figure;
+% imagesc(squeeze(abs(TF_sus_z512susextAir(xsection, :, :)))); colorbar;
+% figure;
+% imagesc(squeeze(abs(TF_sus_z512susextAir_minus(xsection, :, :)))); colorbar;
+% figure;
+% imagesc(squeeze(abs(TF_sus_z512susextAir_minus(xsection, :, :))- abs(TF_sus_z512susextAir(xsection, :, :)))); colorbar;
+% 
+% figure;
+% plot(squeeze(abs(TF_sus_z512susextAir_minus(xsection, 129, :))- abs(TF_sus_z512susextAir(xsection, 129, :))))
 
 %% 
 

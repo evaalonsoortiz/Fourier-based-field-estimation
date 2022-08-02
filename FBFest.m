@@ -56,7 +56,7 @@ classdef FBFest < handle
             % susceptibility is equal to the susceptibility on the origin
             % corner of the matrix.
             bdzFFT = obj.b0 * (1/3 - k_scaling_coeff).*FT_chi;
-            bdzFFT(k2 == 0) = obj.b0 * obj.sus_ext * prod(obj.matrix) / 3;
+            bdzFFT(k2 == 0) = obj.b0 * obj.sus_ext / 3 * prod(obj.matrix);
             obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
             
         end
