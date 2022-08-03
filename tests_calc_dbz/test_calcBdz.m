@@ -5,7 +5,7 @@
 
 %clearvars;
 
-phantom = "sphere"
+phantom = "cylinder"
 switch(phantom)
 %%  An anisotropic rectangular susceptibility in a "little" volume
     case "rect" 
@@ -30,7 +30,7 @@ switch(phantom)
 %% A cylinder
     case "cylinder"
         dim_without_buffer = [128, 128, 128];
-        dim = [512, 512, 128]; % Multiply the dim_without_buffer by a power of 2
+        dim = [128, 128, 128]; % Multiply the dim_without_buffer by a power of 2
         res = [1, 1, 1]; % volume unit
         susin = -0.72e-6; 
         susout = -0.36e-6; 
