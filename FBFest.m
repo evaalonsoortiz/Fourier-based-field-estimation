@@ -39,6 +39,7 @@ classdef FBFest < handle
             % define k-space grid
             [kx,ky,kz] = ndgrid(-k_max(1):interval(1):k_max(1) - interval(1),-k_max(2):interval(2):k_max(2) - interval(2),-k_max(3):interval(3):k_max(3) - interval(3));
             
+            
             %%---------------------------------------------------------------------- %%
             %% Compute Bdz
             %%---------------------------------------------------------------------- %%
@@ -48,16 +49,37 @@ classdef FBFest < handle
             
             % calculate the scaling coefficient 'kz^2/k^2'
             k2 = kx.^2 + ky.^2 + kz.^2;
-            k_scaling_coeff = kz.^2./k2;
+            kernel = obj.b0 * (1/3 - kz.^2./k2);
+            kernel(k2 == 0) = obj.b0 / 3;
             
             % compute Bdz (the z-component of the magnetic field due to a
             % sphere, relative to B0) FFT. The region of interest is
             % assumed to be surrounded by a region of infinite extent whose
             % susceptibility is equal to the susceptibility on the origin
             % corner of the matrix.
-            bdzFFT = obj.b0 * (1/3 - k_scaling_coeff).*FT_chi;
-            bdzFFT(k2 == 0) = obj.b0 * obj.sus_ext / 3 * prod(obj.matrix);
+            bdzFFT = kernel .* FT_chi;
             obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
+            
+%             %%---------------------------------------------------------------------- %%
+%             %% Compute Bdz
+%             %%---------------------------------------------------------------------- %%
+%             
+%             % compute the fourier transform of the susceptibility distribution
+%             FT_chi = fftshift(fftn(fftshift(obj.sus)));
+%             
+%             % calculate the scaling coefficient 'kz^2/k^2'
+%             k2 = kx.^2 + ky.^2 + kz.^2;
+%             k_scaling_coeff = kz.^2./k2;
+%             
+%             % compute Bdz (the z-component of the magnetic field due to a
+%             % sphere, relative to B0) FFT. The region of interest is
+%             % assumed to be surrounded by a region of infinite extent whose
+%             % susceptibility is equal to the susceptibility on the origin
+%             % corner of the matrix.
+%             bdzFFT = obj.b0 * (1/3 - k_scaling_coeff) .* FT_chi;
+%             bdzFFT(k2 == 0) = obj.b0 * obj.sus_ext / 3 * prod(obj.matrix);
+%             obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
+
             
         end
         

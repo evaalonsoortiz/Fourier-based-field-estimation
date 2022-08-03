@@ -20,8 +20,8 @@ dim_without_buffer = zubal_sus_dist.matrix;
 sus = zubal_sus_dist.volume;
 sus(sus == sus(1, 1, 1)) = sus(1,1,1);
 sus_ext = sus(1,1,1);
-sus_pad = sus(1,1,1);
-%sus = sus - sus(1, 1, 1);
+sus_pad = 0;
+sus = sus - sus_ext;
 
 fprintf('Check if the susceptibility %0.4e is the external susceptibility.\n', sus_ext)
 % dim = 1 * dim_without_buffer;
@@ -48,7 +48,7 @@ zubal_sus_dist.volume = sus;
 %% Experiment 1 : Variation calculation with different buffers
 
 n = 1;
-z_dims = (2 * ceil(linspace(256, 256, n))); % Be sure to have even and integer values
+z_dims = (2 * ceil(linspace(0, 0, n))); % Be sure to have even and integer values
 xy_dims = (2 * ceil(linspace(128, 128, n))); % Be sure to have even and integer values
 
 %% Measures
@@ -88,8 +88,29 @@ for zi = 1:n
     t0 = cputime;
     dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, sus_ext, b0);
     t1 = cputime;
-%   TF_sus = fftshift(fftn(fftshift(sus)));
-%     
+    
+    %%
+    FT_chi = fftshift(fftn(fftshift(sus + sus_ext)));
+    FT_s = fftshift(fftn(fftshift(sus)));
+     % k-space window
+    k_max = 1./(2.*zubal_sus_dist.image_res);
+    interval = 2 * k_max ./ dim;
+    % define k-space grid
+    [kx,ky,kz] = ndgrid(-k_max(1):interval(1):k_max(1) - interval(1),-k_max(2):interval(2):k_max(2) - interval(2),-k_max(3):interval(3):k_max(3) - interval(3));
+    % calculate the scaling coefficient 'kz^2/k^2'
+    k2 = kx.^2 + ky.^2 + kz.^2;
+    kernel = b0 * (1/3 - kz.^2 ./ k2);
+    kernel(k2 == 0) = b0 / 3;
+    bdzFFT = kernel .* FT_chi;
+    
+    N = prod(dim);
+    Ni = sum(sus ~= 0, 'all');
+    sum_sn = sum(sus, 'all');
+    moy_val = N*b0 / 3 * (sus_ext + sum_sn / N);
+    
+    bdz = ifftshift(ifftn(ifftshift(bdzFFT)));
+    
+%%     
 %     if (zi == 3 || zi==4 || zi==2 || zi==n)
 %         volumes_not_trunc{zi} = real(dBz_obj.volume * 1e6);
 %         glob_diffs_sec_notTrunc{zi} =  squeeze(real(dBz_obj.volume(xsection, :, :) * 1e6));
