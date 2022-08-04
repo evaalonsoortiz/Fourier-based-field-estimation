@@ -30,59 +30,116 @@ classdef FBFest < handle
         end
         
         function obj = calc_dBz(obj)
-            %%---------------------------------------------------------------------- %%
-            %% Define constants
-            %%---------------------------------------------------------------------- %%
-            
-            % k-space window
-            k_max = 1./(2.*obj.image_res);
-            interval = 2 * k_max ./ obj.dim_with_buff;
+            % 1 : linearity, FFT
+            % 2 : initial
+            % 3 : linearity
+            mode = 3;
+            switch(mode)
+                case 1
+                    disp("case 1 : lin + FFT")
+                %%---------------------------------------------------------------------- %%
+                %% Define constants
+                %%---------------------------------------------------------------------- %%
 
-            % define k-space grid
-            [kx,ky,kz] = ndgrid(-k_max(1):interval(1):k_max(1) - interval(1),-k_max(2):interval(2):k_max(2) - interval(2),-k_max(3):interval(3):k_max(3) - interval(3));            
+                % k-space window
+                k_max = 1./(2.*obj.image_res);
+                interval = 2 * k_max ./ obj.dim_with_buff;
+
+                % define k-space grid
+                [kx,ky,kz] = ndgrid(-k_max(1):interval(1):k_max(1) - interval(1),-k_max(2):interval(2):k_max(2) - interval(2),-k_max(3):interval(3):k_max(3) - interval(3));            
+
+                %%---------------------------------------------------------------------- %%
+                %% Compute Bdz
+                %%---------------------------------------------------------------------- %%            
+
+                % calculate the kernel
+                k2 = kx.^2 + ky.^2 + kz.^2;
+                kernel = obj.b0 * (1/3 - kz.^2./k2);
+                kernel(k2 == 0) = obj.b0 / 3;
+
+                % compute the fourier transform of the susceptibility
+                % distribution using linearity
+                FT_chi = fftshift(fftn(obj.sus - obj.sus_ext, obj.dim_with_buff)); % region of interest
+                FT_chi(k2 == 0) = FT_chi(k2 == 0) + prod(obj.dim_with_buff) * obj.sus_ext; % external susceptibility
+
+                % compute Bdz (the z-component of the magnetic field due to a
+                % sphere, relative to B0) FFT. The region of interest is
+                % assumed to be surrounded by a region of infinite extent whose
+                % susceptibility is equal to the susceptibility on the origin
+                % corner of the matrix.
+                bdzFFT = kernel .* FT_chi;
+                obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
             
-            %%---------------------------------------------------------------------- %%
-            %% Compute Bdz
-            %%---------------------------------------------------------------------- %%            
-                        
-            % calculate the kernel
-            k2 = kx.^2 + ky.^2 + kz.^2;
-            kernel = obj.b0 * (1/3 - kz.^2./k2);
-            kernel(k2 == 0) = obj.b0 / 3;
+                case 2
+                   disp("case 2 : init")
+                %%---------------------------------------------------------------------- %%
+                %% Define constants
+                %%---------------------------------------------------------------------- %%
+
+                % k-space window
+                k_max = 1./(2.*obj.image_res);
+                interval = 2 * k_max ./ obj.matrix;
+
+                % define k-space grid
+                [kx,ky,kz] = ndgrid(-k_max(1):interval(1):k_max(1) - interval(1),-k_max(2):interval(2):k_max(2) - interval(2),-k_max(3):interval(3):k_max(3) - interval(3));            
+
+
+                %%---------------------------------------------------------------------- %%
+                %% Compute Bdz
+                %%---------------------------------------------------------------------- %%
+                
+                % compute the fourier transform of the susceptibility distribution
+                FT_chi = fftshift(fftn(fftshift(obj.sus)));
+                
+                % calculate the scaling coefficient 'kz^2/k^2'
+                k2 = kx.^2 + ky.^2 + kz.^2;
+                kernel = obj.b0 * (1/3 - kz.^2./k2);
+                kernel(k2 == 0) = obj.b0 / 3;
+                
+                % compute Bdz (the z-component of the magnetic field due to a
+                % sphere, relative to B0) FFT. The region of interest is
+                % assumed to be surrounded by a region of infinite extent whose
+                % susceptibility is equal to the susceptibility on the origin
+                % corner of the matrix.
+                bdzFFT = kernel .* FT_chi;
+                obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
+                
+                case 3
             
-            % compute the fourier transform of the susceptibility
-            % distribution using linearity
-            FT_chi = fftshift(fftn(fftshift(obj.sus - obj.sus_ext), obj.dim_with_buff)); % region of interest
-            FT_chi(k2 == 0) = prod(obj.dim_with_buff) * obj.sus_ext; % external susceptibility
-            
-            % compute Bdz (the z-component of the magnetic field due to a
-            % sphere, relative to B0) FFT. The region of interest is
-            % assumed to be surrounded by a region of infinite extent whose
-            % susceptibility is equal to the susceptibility on the origin
-            % corner of the matrix.
-            bdzFFT = kernel .* FT_chi;
-            obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
-            
-%             %%---------------------------------------------------------------------- %%
-%             %% Compute Bdz
-%             %%---------------------------------------------------------------------- %%
-%             
-%             % compute the fourier transform of the susceptibility distribution
-%             FT_chi = fftshift(fftn(fftshift(obj.sus)));
-%             
-%             % calculate the scaling coefficient 'kz^2/k^2'
-%             k2 = kx.^2 + ky.^2 + kz.^2;
-%             kernel = obj.b0 * (1/3 - kz.^2./k2);
-%             kernel(k2 == 0) = obj.b0 / 3;
-%             
-%             % compute Bdz (the z-component of the magnetic field due to a
-%             % sphere, relative to B0) FFT. The region of interest is
-%             % assumed to be surrounded by a region of infinite extent whose
-%             % susceptibility is equal to the susceptibility on the origin
-%             % corner of the matrix.
-%             bdzFFT = kernel .* FT_chi;
-%             obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
-            
+                %%---------------------------------------------------------------------- %%
+                %% Define constants
+                %%---------------------------------------------------------------------- %%
+
+                % k-space window
+                k_max = 1./(2.*obj.image_res);
+                interval = 2 * k_max ./ obj.matrix;
+
+                % define k-space grid
+                [kx,ky,kz] = ndgrid(-k_max(1):interval(1):k_max(1) - interval(1),-k_max(2):interval(2):k_max(2) - interval(2),-k_max(3):interval(3):k_max(3) - interval(3));            
+
+
+                %%---------------------------------------------------------------------- %%
+                %% Compute Bdz
+                %%---------------------------------------------------------------------- %%
+                
+                % calculate the scaling coefficient 'kz^2/k^2'
+                k2 = kx.^2 + ky.^2 + kz.^2;
+                kernel = obj.b0 * (1/3 - kz.^2./k2);
+                kernel(k2 == 0) = obj.b0 / 3;
+                
+                % compute the fourier transform of the susceptibility distribution
+                FT_chi = fftshift(fftn(fftshift(obj.sus - obj.sus_ext)));
+                FT_chi(k2 == 0) = FT_chi(k2 == 0) + prod(obj.matrix) * obj.sus_ext; % external susceptibility
+                
+                % compute Bdz (the z-component of the magnetic field due to a
+                % sphere, relative to B0) FFT. The region of interest is
+                % assumed to be surrounded by a region of infinite extent whose
+                % susceptibility is equal to the susceptibility on the origin
+                % corner of the matrix.
+                bdzFFT = kernel .* FT_chi;
+                obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
+                
+%%                
 %             %%---------------------------------------------------------------------- %%
 %             %% Compute Bdz
 %             %%---------------------------------------------------------------------- %%
@@ -102,7 +159,7 @@ classdef FBFest < handle
 %             bdzFFT = obj.b0 * (1/3 - k_scaling_coeff) .* FT_chi;
 %             bdzFFT(k2 == 0) = obj.b0 * obj.sus_ext / 3 * prod(obj.matrix);
 %             obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
-
+            end
             
         end
         

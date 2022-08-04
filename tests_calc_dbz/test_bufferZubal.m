@@ -13,21 +13,15 @@ b0 = 3; % [T]
     % Resolution 1.1x1.1x1.4
     
 zubal_sus_dist = Zubal('zubal_EAO.nii');
-% sus_nii = make_nii(zubal_sus_dist.volume);
-% save_nii(sus_nii, 'sus_zubal_EAO.nii')
 
 dim_without_buffer = zubal_sus_dist.matrix;
 sus = zubal_sus_dist.volume;
-sus(sus == sus(1, 1, 1)) = sus(1,1,1);
+%sus(sus == sus(1, 1, 1)) = sus(1,1,1);
 sus_ext = sus(1,1,1);
 sus_pad = sus(1,1,1);
 %sus = sus - sus_ext;
 
 fprintf('Check if the susceptibility %0.4e is the external susceptibility.\n', sus_ext)
-% dim = 1 * dim_without_buffer;
-% Add a buffer
-% padDim =  (dim - dim_without_buffer) / 2;
-% sus = padarray(sus, padDim, sus_ext);
 
 zubal_sus_dist.volume = sus;
 
@@ -47,7 +41,7 @@ zubal_sus_dist.volume = sus;
     
 %% Experiment 1 : Variation calculation with different buffers
 
-n = 40;
+n = 1;
 z_dims = (2 * ceil(linspace(0, 256, n))); % Be sure to have even and integer values
 xy_dims = (2 * ceil(linspace(0, 256, n))); % Be sure to have even and integer values
 
@@ -71,24 +65,41 @@ time = zeros(1, n);
 best = best_z512;
 
 for zi = 1:n 
-    disp(xy_dims(zi))
+    disp(z_dims(zi))
     
     sus = zubal_sus_dist.volume;
     
-     % dim = dim_without_buffer + [xy_dims(zi), xy_dims(zi), z_dims(zi)];
-     % dim = dim_without_buffer + [xy_dims(zi), xy_dims(zi), z_dims(zi)];
-     dim = dim_without_buffer + [0, 0, z_dims(zi)];
-
-    % Add a buffer
-    %padDim =  (dim - dim_without_buffer) / 2;
-    %sus = padarray(sus, padDim, sus_pad);
+    % dim = dim_without_buffer + [xy_dims(zi), xy_dims(zi), z_dims(zi)];
+    dim = dim_without_buffer + [0, 0, z_dims(zi)];
+    padDim =  (dim - dim_without_buffer) / 2;
     
     %% Variation calculation
     % tic
-    t0 = cputime;
-    dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim_without_buffer, sus_ext, b0, dim);
-    t1 = cputime;
-    
+    mode =  2; % 1 : lin FFT ; 2 : init ou lin
+    switch mode
+        case 1
+            t0 = cputime;
+            dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim_without_buffer, sus_ext, b0, dim);
+            t1 = cputime;
+            figure;
+            imagesc(squeeze(real(dBz_obj.volume(xsection, :, :) * 1e6))); colorbar;
+
+            %Truncate :
+            dBz_obj.matrix = dim_without_buffer;
+            dBz_obj.volume = dBz_obj.volume(1:dim_without_buffer(1) + padDim(1), 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1 + padDim(3));
+
+        case 2
+             % Add a buffer
+            
+            sus = padarray(sus, padDim, sus_pad);
+            t0 = cputime;
+            dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, sus_ext, b0, dim);
+            t1 = cputime;
+            %Truncate :
+            dBz_obj.matrix = dim_without_buffer;
+            dBz_obj.volume = dBz_obj.volume( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3));
+
+    end
 
 %     FT_chi = fftshift(fftn(fftshift(sus + sus_ext)));
 %     FT_s = fftshift(fftn(fftshift(sus)));
@@ -114,10 +125,7 @@ for zi = 1:n
 %         volumes_not_trunc{zi} = real(dBz_obj.volume * 1e6);
 %         glob_diffs_sec_notTrunc{zi} =  squeeze(real(dBz_obj.volume(xsection, :, :) * 1e6));
 %         glob_diffs_sec_notTrunc{zi}(padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3)) = (glob_diffs_sec_notTrunc{zi}(padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3)) - squeeze(best(xsection, :, :))) .^2;
-%     end
-    %Truncate :
-    dBz_obj.matrix = dim_without_buffer;
-    dBz_obj.volume = dBz_obj.volume( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3));
+
     % Save NIFTI image of the field shift
     dBz_obj.save(sprintf('%s_y%u_z%u', dbz_path, xy_dims(zi), z_dims(zi)));
     dBz_map_ppm = real(dBz_obj.volume * 1e6); %TODO remove real ? Loss of the y-translation
@@ -127,7 +135,7 @@ for zi = 1:n
     
     if (zi > 1)
         it_diffs(zi) = sum((dBz_map_ppm - volumes_trunc{zi - 1}).^2, 'all') / prod(dim_without_buffer);
-        it_diffs_sec(:, :, zi) = squeeze((dBz_map_ppm(xsection, :, :) - volumes_trunc{zi - 1}(xsection, :, :)).^2);
+%         it_diffs_sec(:, :, zi) = squeeze((dBz_map_ppm(xsection, :, :) - volumes_trunc{zi - 1}(xsection, :, :)).^2);
     end
     
     glob_diffs(zi) =  sum((dBz_map_ppm - best) .^2, 'all') / prod(dim_without_buffer);
@@ -138,21 +146,21 @@ for zi = 1:n
 end
 %%
 yyaxis left
-figure; plot(xy_dims(2:end), it_diffs(2:end), '.-'); %HERE
+figure; plot(z_dims(2:end), it_diffs(2:end), '.-'); %HERE
 hold on 
-plot(xy_dims, glob_diffs, '.-'); %HERE
+plot(z_dims, glob_diffs, '.-'); %HERE
 ylabel('Quadratic error (ppm^2)')
 % hold on
 % yyaxis right
 % plot(z_dims, time);
 % ylabel('time (ms)')
 hold off
-legend('Between successive iterations', 'Between the current calculation and the last (xy512, z256))') %, 'execution time (ms)') %HERE
-xlabel('Pixels added in the x, y direction') %HERE
+legend('Between successive iterations', 'Between the current calculation and the last (z512))') %, 'execution time (ms)') %HERE
+xlabel('Pixels added in the z direction') %HERE
 grid on
 grid minor
-title('Mean of the quadratic errors while the dimension of the x, y and z buffers increase') %HERE
-%title('Mean of the quadratic errors while the dimension of the x, y and z-buffer increases')
+title('Mean of the quadratic errors while the dimension of the z buffer increases') %HERE
+%title('Mean of the quadratic errors while the dimension of the x, y and z-buffer increase')
 
 
 
@@ -162,20 +170,20 @@ title('Mean of the quadratic errors while the dimension of the x, y and z buffer
 
 figure;
 yyaxis left
-plot(xy_dims, glob_diffs, '.-');
+plot(z_dims, glob_diffs, '.-');
 ylabel('Quadratic difference (ppm^2)') %HERE
 yyaxis right
-plot(xy_dims, mean_value, '.-');
+plot(z_dims, mean_value, '.-');
 ylabel('Mean value in the volume (ppm)')
-xlabel('Pixels added in the x, y direction') %HERE
-legend('Quadratic difference between current and last iteration (xy512, z256)', 'Mean value in the volume')
-title('Quadratic difference and mean value while the x, y and z buffer increase') %HERE
+xlabel('Pixels added in the z direction') %HERE
+legend('Quadratic difference between current and last iteration (z512)', 'Mean value in the volume')
+title('Quadratic difference and mean value while z buffer increases') %HERE
 grid on
 grid minor
 
 %%
-% figure;
-% imagesc(squeeze(best_z512_susextAir(xsection, :, :) - best_z512_minusSusAir_susextAir(xsection, :, :))); colorbar;
+figure;
+imagesc(squeeze(best_z512(xsection, :, :) - best_z512_linFFT(xsection, :, :))); colorbar;
 
 % 
 % figure;
