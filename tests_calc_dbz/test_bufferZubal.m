@@ -49,7 +49,7 @@ zubal_sus_dist.volume = sus;
 
 n = 40;
 z_dims = (2 * ceil(linspace(0, 256, n))); % Be sure to have even and integer values
-xy_dims = (2 * ceil(linspace(128, 128, n))); % Be sure to have even and integer values
+xy_dims = (2 * ceil(linspace(0, 256, n))); % Be sure to have even and integer values
 
 %% Measures
 it_diffs = zeros(1, n); % store the iterative quadratique differences
@@ -67,26 +67,26 @@ time = zeros(1, n);
 
 %best = zeros(dim_without_buffer);
 %best = best_y512_air_Corr; % HERE
-best = best_z512; % HERE
-%best = best_z512_minusSusAir_susext0;
+%best = best_xy512_z256 ; % HERE
+best = best_z512;
 
 for zi = 1:n 
-    disp(z_dims(zi))
+    disp(xy_dims(zi))
     
     sus = zubal_sus_dist.volume;
     
      % dim = dim_without_buffer + [xy_dims(zi), xy_dims(zi), z_dims(zi)];
-     % dim = dim_without_buffer + [xy_dims(zi), 0, 0];
+     % dim = dim_without_buffer + [xy_dims(zi), xy_dims(zi), z_dims(zi)];
      dim = dim_without_buffer + [0, 0, z_dims(zi)];
 
     % Add a buffer
-    padDim =  (dim - dim_without_buffer) / 2;
-    sus = padarray(sus, padDim, sus_pad);
+    %padDim =  (dim - dim_without_buffer) / 2;
+    %sus = padarray(sus, padDim, sus_pad);
     
     %% Variation calculation
     % tic
     t0 = cputime;
-    dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, sus_ext, b0);
+    dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim_without_buffer, sus_ext, b0, dim);
     t1 = cputime;
     
 
@@ -138,20 +138,20 @@ for zi = 1:n
 end
 %%
 yyaxis left
-figure; plot(z_dims(2:end), it_diffs(2:end), '.-'); %HERE
+figure; plot(xy_dims(2:end), it_diffs(2:end), '.-'); %HERE
 hold on 
-plot(z_dims, glob_diffs, '.-'); %HERE
+plot(xy_dims, glob_diffs, '.-'); %HERE
 ylabel('Quadratic error (ppm^2)')
-hold on
-yyaxis right
-plot(z_dims, time);
-ylabel('time (ms)')
+% hold on
+% yyaxis right
+% plot(z_dims, time);
+% ylabel('time (ms)')
 hold off
-legend('Between successive iterations', 'Between the current calculation and the last (z512)', 'execution time (ms)') %HERE
-xlabel('Pixels added in the z direction') %HERE
+legend('Between successive iterations', 'Between the current calculation and the last (xy512, z256))') %, 'execution time (ms)') %HERE
+xlabel('Pixels added in the x, y direction') %HERE
 grid on
 grid minor
-title('Mean of the quadratic errors while the dimension of the z-buffer increases') %HERE
+title('Mean of the quadratic errors while the dimension of the x, y and z buffers increase') %HERE
 %title('Mean of the quadratic errors while the dimension of the x, y and z-buffer increases')
 
 
@@ -162,14 +162,14 @@ title('Mean of the quadratic errors while the dimension of the z-buffer increase
 
 figure;
 yyaxis left
-plot(z_dims, glob_diffs, '.-');
+plot(xy_dims, glob_diffs, '.-');
 ylabel('Quadratic difference (ppm^2)') %HERE
 yyaxis right
-plot(z_dims, mean_value, '.-');
+plot(xy_dims, mean_value, '.-');
 ylabel('Mean value in the volume (ppm)')
-xlabel('Pixels added in the z direction') %HERE
-legend('Quadratic difference between current and last iteration (z512)', 'Mean value in the volume')
-title('Quadratic difference and mean value while the z-buffer increases') %HERE
+xlabel('Pixels added in the x, y direction') %HERE
+legend('Quadratic difference between current and last iteration (xy512, z256)', 'Mean value in the volume')
+title('Quadratic difference and mean value while the x, y and z buffer increase') %HERE
 grid on
 grid minor
 
@@ -196,6 +196,20 @@ grid minor
 % plot(squeeze(abs(TF_sus_z512susextAir_minus(xsection, 129, :))- abs(TF_sus_z512susextAir(xsection, 129, :))))
 
 %% 
+
+figure;
+plot(z_dims, time_z512_init)
+hold on
+plot(z_dims, time_z512_linearity)
+hold on
+plot(z_dims, time_z512_linearity_fft)
+hold off
+legend('without using linearity', 'with linearity', 'with linearity + fft')
+title('Execution time of the estimation of the field shift')
+xlabel('Voxels added in the z direction')
+ylabel('execution time (ms)')
+
+%%
 
 % figure; 
 % subplot(2, 4, 1);
