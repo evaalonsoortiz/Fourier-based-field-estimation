@@ -5,7 +5,7 @@
 
 %clearvars;
 
-phantom = "cylinder"
+phantom = "sphere"
 switch(phantom)
 %%  An anisotropic rectangular susceptibility in a "little" volume
     case "rect" 
@@ -14,7 +14,7 @@ switch(phantom)
         susin = 1;
         susout = 0;
         sus = zeros(dim) + susout;
-        %sus(7:10, 8:9, 6:11) = susin;
+        sus(7:10, 8:9, 6:11) = susin;
         
         
 %% A sphere
@@ -104,8 +104,8 @@ end
 toc
         
 %% Variation calculation
-tic
-dBz_obj = FBFest(sus, res, dim, sus(1, 1, 1), b0);
+tic 
+dBz_obj = FBFest(sus, res, dim, sus(1, 1, 1), b0, dim); % ( sus, image_res, matrix, sus_ext, b0, dim_with_buff, varargin )
 toc
 dBz_map_ppm = real(dBz_obj.volume * 1e6);
 
@@ -186,6 +186,23 @@ xlabel('grid position')
 ylabel('dBz (ppm)')
 legend('Analytical', 'simulation');
 title(sprintf('Field in the %s phantom in ppm along z axis with susin=%0.2e and susout=%0.2e', phantom, susin, susout))
+
+
+%% Difference with te simulation using linearity
+figure;
+plot(squeeze(dbz_analytical_ppm(sectionx, sectiony, :)));
+hold on
+plot(squeeze(dbz_init(sectionx, sectiony, :)));
+hold on
+plot(squeeze(dbz_lin(sectionx, sectiony, :)));
+hold off
+xlabel('grid position')
+ylabel('dBz (ppm)')
+legend('Analytical', 'simulation initial', 'simulation using linearity');
+title(sprintf('Field in the %s phantom in ppm along z axis with susin=%0.2e and susout=%0.2e', phantom, susin, susout))
+
+figure;
+plot(abs(squeeze(dbz_init(sectionx, sectiony, :)) - squeeze(dbz_lin(sectionx, sectiony, :))))
 
 %% Plot result at a section
 %   y section

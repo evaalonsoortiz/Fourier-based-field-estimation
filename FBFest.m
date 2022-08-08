@@ -33,7 +33,7 @@ classdef FBFest < handle
             % 1 : linearity, FFT
             % 2 : initial
             % 3 : linearity
-            mode = 3;
+            mode = 2;
             switch(mode)
                 case 1
                     disp("case 1 : lin + FFT")
@@ -59,16 +59,16 @@ classdef FBFest < handle
 
                 % compute the fourier transform of the susceptibility
                 % distribution using linearity
-                FT_chi = fftshift(fftn(obj.sus - obj.sus_ext, obj.dim_with_buff)); % region of interest
-                FT_chi(k2 == 0) = FT_chi(k2 == 0) + prod(obj.dim_with_buff) * obj.sus_ext; % external susceptibility
+                FT_chi = fftn(obj.sus - obj.sus_ext, obj.dim_with_buff); % region of interest
+                FT_chi(1, 1, 1) = FT_chi(1,1,1) + prod(obj.dim_with_buff) * obj.sus_ext; % external susceptibility at k=0
 
                 % compute Bdz (the z-component of the magnetic field due to a
                 % sphere, relative to B0) FFT. The region of interest is
                 % assumed to be surrounded by a region of infinite extent whose
                 % susceptibility is equal to the susceptibility on the origin
                 % corner of the matrix.
-                bdzFFT = kernel .* FT_chi;
-                obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
+                bdzFFT = fftshift(kernel) .* FT_chi; % the kernel is shifted to have k = 0 in the up left corner
+                obj.volume = ifftn(bdzFFT);
             
                 case 2
                    disp("case 2 : init")
@@ -89,7 +89,8 @@ classdef FBFest < handle
                 %%---------------------------------------------------------------------- %%
                 
                 % compute the fourier transform of the susceptibility distribution
-                FT_chi = fftshift(fftn(fftshift(obj.sus)));
+                %FT_chi = fftshift(fftn(fftshift(obj.sus)));
+                FT_chi = fftn(obj.sus);
                 
                 % calculate the scaling coefficient 'kz^2/k^2'
                 k2 = kx.^2 + ky.^2 + kz.^2;
@@ -101,11 +102,13 @@ classdef FBFest < handle
                 % assumed to be surrounded by a region of infinite extent whose
                 % susceptibility is equal to the susceptibility on the origin
                 % corner of the matrix.
-                bdzFFT = kernel .* FT_chi;
+                %bdzFFT = kernel .* FT_chi;
+                bdzFFT = fftshift(kernel) .* FT_chi;
                 obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
+                obj.volume = ifftn(bdzFFT);
                 
                 case 3
-            
+            disp("case 3 : linearity")
                 %%---------------------------------------------------------------------- %%
                 %% Define constants
                 %%---------------------------------------------------------------------- %%
@@ -128,16 +131,17 @@ classdef FBFest < handle
                 kernel(k2 == 0) = obj.b0 / 3;
                 
                 % compute the fourier transform of the susceptibility distribution
-                FT_chi = fftshift(fftn(fftshift(obj.sus - obj.sus_ext)));
-                FT_chi(k2 == 0) = FT_chi(k2 == 0) + prod(obj.matrix) * obj.sus_ext; % external susceptibility
+                FT_chi = fftn(obj.sus - obj.sus_ext);
+                FT_chi(1, 1, 1) = FT_chi(1, 1, 1) + prod(obj.matrix) * obj.sus_ext; % external susceptibility at k=0
                 
                 % compute Bdz (the z-component of the magnetic field due to a
                 % sphere, relative to B0) FFT. The region of interest is
                 % assumed to be surrounded by a region of infinite extent whose
                 % susceptibility is equal to the susceptibility on the origin
                 % corner of the matrix.
-                bdzFFT = kernel .* FT_chi;
-                obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
+                bdzFFT = fftshift(kernel) .* FT_chi;
+                obj.volume = ifftn(bdzFFT);
+                
                 
 %%                
 %             %%---------------------------------------------------------------------- %%

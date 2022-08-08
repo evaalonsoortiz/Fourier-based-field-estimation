@@ -41,9 +41,9 @@ zubal_sus_dist.volume = sus;
     
 %% Experiment 1 : Variation calculation with different buffers
 
-n = 1;
+n = 40;
 z_dims = (2 * ceil(linspace(0, 256, n))); % Be sure to have even and integer values
-xy_dims = (2 * ceil(linspace(0, 256, n))); % Be sure to have even and integer values
+xy_dims = (2 * ceil(linspace(0, 128, n))); % Be sure to have even and integer values
 
 %% Measures
 it_diffs = zeros(1, n); % store the iterative quadratique differences
@@ -60,16 +60,16 @@ mean_value = zeros(1, n);
 time = zeros(1, n);
 
 %best = zeros(dim_without_buffer);
-%best = best_y512_air_Corr; % HERE
+best = best_z512_linFFT; % HERE
 %best = best_xy512_z256 ; % HERE
-best = best_z512;
-
+%best = best_z512;
+disp('sans fftshift')
 for zi = 1:n 
     disp(z_dims(zi))
     
     sus = zubal_sus_dist.volume;
     
-    % dim = dim_without_buffer + [xy_dims(zi), xy_dims(zi), z_dims(zi)];
+    %dim = dim_without_buffer + [xy_dims(zi), xy_dims(zi), z_dims(zi)];
     dim = dim_without_buffer + [0, 0, z_dims(zi)];
     padDim =  (dim - dim_without_buffer) / 2;
     
@@ -80,25 +80,24 @@ for zi = 1:n
         case 1
             t0 = cputime;
             dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim_without_buffer, sus_ext, b0, dim);
-            t1 = cputime;
-            figure;
-            imagesc(squeeze(real(dBz_obj.volume(xsection, :, :) * 1e6))); colorbar;
+            %t1 = cputime;
 
             %Truncate :
             dBz_obj.matrix = dim_without_buffer;
-            dBz_obj.volume = dBz_obj.volume(1:dim_without_buffer(1) + padDim(1), 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1 + padDim(3));
+            dBz_obj.volume = dBz_obj.volume(1:dim_without_buffer(1), 1:dim_without_buffer(2), 1:dim_without_buffer(3));
+            t1 = cputime;
 
         case 2
              % Add a buffer
-            
-            sus = padarray(sus, padDim, sus_pad);
             t0 = cputime;
+            sus = padarray(sus, padDim, sus_pad);
+            %t0 = cputime;
             dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, sus_ext, b0, dim);
-            t1 = cputime;
+            %t1 = cputime;
             %Truncate :
             dBz_obj.matrix = dim_without_buffer;
             dBz_obj.volume = dBz_obj.volume( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3));
-
+            t1 = cputime;
     end
 
 %     FT_chi = fftshift(fftn(fftshift(sus + sus_ext)));
@@ -128,8 +127,7 @@ for zi = 1:n
 
     % Save NIFTI image of the field shift
     dBz_obj.save(sprintf('%s_y%u_z%u', dbz_path, xy_dims(zi), z_dims(zi)));
-    dBz_map_ppm = real(dBz_obj.volume * 1e6); %TODO remove real ? Loss of the y-translation
-    
+    dBz_map_ppm = real(dBz_obj.volume * 1e6);
     volumes_trunc{zi} = dBz_map_ppm;
     time(zi) = t1-t0;
     
@@ -153,9 +151,9 @@ ylabel('Quadratic error (ppm^2)')
 % hold on
 % yyaxis right
 % plot(z_dims, time);
-% ylabel('time (ms)')
+% ylabel('time (s)')
 hold off
-legend('Between successive iterations', 'Between the current calculation and the last (z512))') %, 'execution time (ms)') %HERE
+legend('Between successive iterations', 'Between the current calculation and the last (z512))') %, 'execution time (s)') %HERE
 xlabel('Pixels added in the z direction') %HERE
 grid on
 grid minor
@@ -183,7 +181,7 @@ grid minor
 
 %%
 figure;
-imagesc(squeeze(best_z512(xsection, :, :) - best_z512_linFFT(xsection, :, :))); colorbar;
+imagesc(squeeze(best_z512_init(xsection, :, :) - best_z512_linFFT(xsection, :, :))); colorbar;
 
 % 
 % figure;
@@ -210,12 +208,12 @@ plot(z_dims, time_z512_init)
 hold on
 plot(z_dims, time_z512_linearity)
 hold on
-plot(z_dims, time_z512_linearity_fft)
+plot(z_dims, time_z512_linFFT)
 hold off
-legend('without using linearity', 'with linearity', 'with linearity + fft')
+legend('without using linearity', 'with linearity', 'with linearity + fft padding')
 title('Execution time of the estimation of the field shift')
 xlabel('Voxels added in the z direction')
-ylabel('execution time (ms)')
+ylabel('execution time (s)')
 
 %%
 
