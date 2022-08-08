@@ -5,7 +5,7 @@
 
 %clearvars;
 
-phantom = "sphere"
+phantom = "sphere_buffer"
 switch(phantom)
 %%  An anisotropic rectangular susceptibility in a "little" volume
     case "rect" 
