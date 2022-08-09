@@ -28,7 +28,7 @@ function [distROI, d8_matrix] = calc_dist_ROI(matrix)
 %     element and the edges of the volume.
 %   d8_matrix
 %     The matrix of the 8-distances in the matrix.
-
+disp('Calculation dist ROI ...')
 dimMatrix = size(matrix);
 
 %% Initialisation of the matrix of distances
@@ -72,7 +72,5 @@ d8_matrix = d8_matrix(2:dimMatrix(1) + 1, 2:dimMatrix(2) + 1, 2:dimMatrix(3) + 1
             min(d8_matrix(:, :, end), [], 'all') ...
             min(d8_matrix(:, end, :), [], 'all') ...
             min(d8_matrix(end, :, :), [], 'all')]);
-        disp(ind)
-
 
 end

@@ -1,28 +1,42 @@
 classdef FBFest < handle
     properties
         % volume properties
+        phantom
         matrix
+        dim_with_buffer
         image_res
-        volume
+        volume % [T]
         sus % USI (not ppm)
         type
         sus_ext % USI (not ppm)
         b0 % [T]
-        dim_with_buff
     end
     
     methods
-        function obj = FBFest( sus, image_res, matrix, sus_ext, b0, dim_with_buff, varargin )
+        function obj = FBFest(type, sus, image_res, matrix, sus_ext, b0, varargin )
             % Method FBFest (constructor)
+            % type      : the type of the phantom : 'spherical',
+            % 'cylindrical', 'Zubal', or '' for an other phantom
+            % sus       : the 3D distribution of susceptibility
+            % image_res : a vector of the resolution in the 3 directions
+            % matrix    : a vector of the dimensions of the field_view (matching sus dimensions)
+            % sus_ext   : a scalar, the susceptibility of the external medium
+            %              (the region of interest is assumed to be surrounded
+            %              by a region of infinite extent whose susceptibility is sus_ext)
+            % b0        : b0 strength in Teslas
+            % varargin  : a dimension with the buffer can be chosen
+            obj.type = type;
             obj.matrix  = matrix ;
             obj.image_res  = image_res ;
             obj.sus  = sus ;
-            obj.b0 = b0 ;
             obj.sus_ext = sus_ext;
-            obj.dim_with_buff = dim_with_buff;
+            obj.b0 = b0 ;
             
-            if nargin > 3
-                obj.type = varargin;
+            
+            if nargin > 6
+                obj.dim_with_buffer = varargin{1};
+            else
+                obj.calc_buffer();
             end
             
             obj.volume = zeros(obj.matrix(1), obj.matrix(2), obj.matrix(3));
@@ -33,17 +47,16 @@ classdef FBFest < handle
             % 1 : linearity, FFT
             % 2 : initial
             % 3 : linearity
-            mode = 2;
+            mode = 1;
             switch(mode)
                 case 1
                     disp("case 1 : lin + FFT")
                 %%---------------------------------------------------------------------- %%
                 %% Define constants
                 %%---------------------------------------------------------------------- %%
-
                 % k-space window
                 k_max = 1./(2.*obj.image_res);
-                interval = 2 * k_max ./ obj.dim_with_buff;
+                interval = 2 * k_max ./ obj.dim_with_buffer;
 
                 % define k-space grid
                 [kx,ky,kz] = ndgrid(-k_max(1):interval(1):k_max(1) - interval(1),-k_max(2):interval(2):k_max(2) - interval(2),-k_max(3):interval(3):k_max(3) - interval(3));            
@@ -53,22 +66,21 @@ classdef FBFest < handle
                 %%---------------------------------------------------------------------- %%            
 
                 % calculate the kernel
+                % make sure that the k-space window is the same that the
+                % one of the fft of susceptibility
                 k2 = kx.^2 + ky.^2 + kz.^2;
-                kernel = obj.b0 * (1/3 - kz.^2./k2);
-                kernel(k2 == 0) = obj.b0 / 3;
+                kernel = fftshift(obj.b0 * (1/3 - kz.^2./k2)); 
+                kernel(1, 1, 1) = obj.b0 / 3;
 
                 % compute the fourier transform of the susceptibility
                 % distribution using linearity
-                FT_chi = fftn(obj.sus - obj.sus_ext, obj.dim_with_buff); % region of interest
-                FT_chi(1, 1, 1) = FT_chi(1,1,1) + prod(obj.dim_with_buff) * obj.sus_ext; % external susceptibility at k=0
+                FT_chi = fftn(obj.sus - obj.sus_ext, obj.dim_with_buffer); % region of interest
+                FT_chi(1, 1, 1) = FT_chi(1,1,1) + prod(obj.dim_with_buffer) * obj.sus_ext; % external susceptibility at k=0
 
                 % compute Bdz (the z-component of the magnetic field due to a
-                % sphere, relative to B0) FFT. The region of interest is
-                % assumed to be surrounded by a region of infinite extent whose
-                % susceptibility is equal to the susceptibility on the origin
-                % corner of the matrix.
-                bdzFFT = fftshift(kernel) .* FT_chi; % the kernel is shifted to have k = 0 in the up left corner
-                obj.volume = ifftn(bdzFFT);
+                % sphere, relative to B0) FFT. 
+                bdzFFT = kernel .* FT_chi; % the kernel is shifted to have k = 0 in the up left corner
+                obj.volume = real(ifftn(bdzFFT));
             
                 case 2
                    disp("case 2 : init")
@@ -108,7 +120,7 @@ classdef FBFest < handle
                 obj.volume = ifftn(bdzFFT);
                 
                 case 3
-            disp("case 3 : linearity")
+                    disp("case 3 : linearity")
                 %%---------------------------------------------------------------------- %%
                 %% Define constants
                 %%---------------------------------------------------------------------- %%
@@ -165,6 +177,24 @@ classdef FBFest < handle
 %             obj.volume = ifftshift(ifftn(ifftshift(bdzFFT)));
             end
             
+        end
+        
+        function obj = calc_buffer(obj)
+           switch(obj.type)
+               case 'spherical'
+                   [dist_ROI, ] = calc_dist_ROI(obj.sus);
+                   disp(dist_ROI);disp('size:')
+                   disp(size(dist_ROI))
+                   radius_approx = obj.matrix(1) / 2 - dist_ROI;
+                   side = max([pow2(nextpow2(5 * radius_approx)), obj.matrix(1)]); 
+                   obj.dim_with_buffer = [side, side, side]; % TODO
+               case 'cylindrical'
+                   obj.dim_with_buffer = obj.matrix; % TODO
+               case 'Zubal'
+                   obj.dim_with_buffer = [512, 512, 512]; % [256, 256, 384] voxels added
+               case ''
+                   obj.dim_with_buffer = 2 * obj.matrix; % TODO
+           end
         end
         
         function vol = save(obj, fileName, saveFormat)
