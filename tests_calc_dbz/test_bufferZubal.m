@@ -41,8 +41,8 @@ zubal_sus_dist.volume = sus;
     
 %% Experiment 1 : Variation calculation with different buffers
 
-n = 40;
-z_dims = (2 * ceil(linspace(0, 256, n))); % Be sure to have even and integer values
+n = 1;
+z_dims = (2 * ceil(linspace(0, 0, n))); % Be sure to have even and integer values
 xy_dims = (2 * ceil(linspace(0, 128, n))); % Be sure to have even and integer values
 
 %% Measures
@@ -59,11 +59,11 @@ mean_value = zeros(1, n);
 
 time = zeros(1, n);
 
-%best = zeros(dim_without_buffer);
-best = best_z512_linFFT; % HERE
+best = zeros(dim_without_buffer);
+%best = best_z512_linFFT; % HERE
 %best = best_xy512_z256 ; % HERE
 %best = best_z512;
-disp('sans fftshift')
+
 for zi = 1:n 
     disp(z_dims(zi))
     
@@ -75,16 +75,16 @@ for zi = 1:n
     
     %% Variation calculation
     % tic
-    mode =  2; % 1 : lin FFT ; 2 : init ou lin
+    mode =  1; % 1 : lin FFT ; 2 : init ou lin
     switch mode
         case 1
             t0 = cputime;
-            dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim_without_buffer, sus_ext, b0, dim);
+            dBz_obj = FBFest('Zubal', sus, zubal_sus_dist.image_res, dim_without_buffer, sus_ext, b0, [256, 256, 128]);
             %t1 = cputime;
 
             %Truncate :
-            dBz_obj.matrix = dim_without_buffer;
-            dBz_obj.volume = dBz_obj.volume(1:dim_without_buffer(1), 1:dim_without_buffer(2), 1:dim_without_buffer(3));
+%             dBz_obj.matrix = dim_without_buffer;
+%             dBz_obj.volume = dBz_obj.volume(1:dim_without_buffer(1), 1:dim_without_buffer(2), 1:dim_without_buffer(3));
             t1 = cputime;
 
         case 2
@@ -180,9 +180,25 @@ grid on
 grid minor
 
 %%
+xsec = 1; zsec = 1;
 figure;
-imagesc(squeeze(best_z512_init(xsection, :, :) - best_z512_linFFT(xsection, :, :))); colorbar;
+imagesc(squeeze(dbz_512512640(xsec, :, :) - dbz_512512512(xsec, :, :))*1e6); colorbar
+title('Difference between the field map with a [512, 512, 640] field view and a [512, 512, 512] one in ppm')
+xlabel('z position')
+ylabel('y position')
 
+figure;
+imagesc(squeeze(dbz_256256256(xsec, :, :) - dbz_256256128(xsec, :, :))*1e6); colorbar
+title('Difference between the field map with a [512, 512, 640] field view and a [512, 512, 512] one in ppm')
+xlabel('z position')
+ylabel('y position')
+
+%%
+figure;
+imagesc(squeeze(dbz_512512640(:, :, zsec) - dbz_512512512(:, :, zsec))*1e6); colorbar
+title('Difference between the field map with a [512, 512, 640] field view and a [512, 512, 512] one in ppm')
+xlabel('y position')
+ylabel('x position')
 % 
 % figure;
 % imagesc(squeeze(abs(TF_sus_z512susextAir_0(xsection, :, :)))); colorbar;
@@ -202,18 +218,18 @@ imagesc(squeeze(best_z512_init(xsection, :, :) - best_z512_linFFT(xsection, :, :
 % plot(squeeze(abs(TF_sus_z512susextAir_minus(xsection, 129, :))- abs(TF_sus_z512susextAir(xsection, 129, :))))
 
 %% 
-
-figure;
-plot(z_dims, time_z512_init)
-hold on
-plot(z_dims, time_z512_linearity)
-hold on
-plot(z_dims, time_z512_linFFT)
-hold off
-legend('without using linearity', 'with linearity', 'with linearity + fft padding')
-title('Execution time of the estimation of the field shift')
-xlabel('Voxels added in the z direction')
-ylabel('execution time (s)')
+% 
+% figure;
+% plot(z_dims, time_z512_init)
+% hold on
+% plot(z_dims, time_z512_linearity)
+% hold on
+% plot(z_dims, time_z512_linFFT)
+% hold off
+% legend('without using linearity', 'with linearity', 'with linearity + fft padding')
+% title('Execution time of the estimation of the field shift')
+% xlabel('Voxels added in the z direction')
+% ylabel('execution time (s)')
 
 %%
 

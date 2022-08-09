@@ -81,6 +81,9 @@ classdef FBFest < handle
                 % sphere, relative to B0) FFT. 
                 bdzFFT = kernel .* FT_chi; % the kernel is shifted to have k = 0 in the up left corner
                 obj.volume = real(ifftn(bdzFFT));
+                
+                %% Truncate the result to the initial dimension of the susceptibility
+                obj.volume = obj.volume(1:obj.matrix(1), 1:obj.matrix(2), 1:obj.matrix(3));
             
                 case 2
                    disp("case 2 : init")
@@ -183,10 +186,8 @@ classdef FBFest < handle
            switch(obj.type)
                case 'spherical'
                    [dist_ROI, ] = calc_dist_ROI(obj.sus);
-                   disp(dist_ROI);disp('size:')
-                   disp(size(dist_ROI))
-                   radius_approx = obj.matrix(1) / 2 - dist_ROI;
-                   side = max([pow2(nextpow2(5 * radius_approx)), obj.matrix(1)]); 
+                   diam_approx = obj.matrix(1) - 2 * dist_ROI;
+                   side = max([pow2(nextpow2(5 * diam_approx)), obj.matrix(1)]); 
                    obj.dim_with_buffer = [side, side, side]; % TODO
                case 'cylindrical'
                    obj.dim_with_buffer = obj.matrix; % TODO
@@ -267,12 +268,14 @@ classdef FBFest < handle
             plot(squeeze(z(round(obj.matrix(1)/2),round(obj.matrix(2)/2),:))*obj.image_res(3),1e6*squeeze(real(obj.volume(round(obj.matrix(1)/2),round(obj.matrix(2)/2),:))),'-.k','Linewidth',2);
             xlabel('z-position [mm]')
             ylabel('B_{dz} [ppm]')
+            grid on
             
             % plot Bdz along the x-axis
             figure;
             plot(squeeze(x(:,round(obj.matrix(2)/2),round(obj.matrix(3)/2)))*obj.image_res(1),1e6*squeeze(real(obj.volume(:,round(obj.matrix(2)/2),round(obj.matrix(3)/2)))),'-.k','Linewidth',2);
             xlabel('x-position [mm]')
             ylabel('B_{dz} [ppm]')
+            grid on
 
         end
 

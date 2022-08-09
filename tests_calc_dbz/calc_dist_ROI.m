@@ -1,12 +1,13 @@
 function [distROI, d8_matrix] = calc_dist_ROI(matrix)
 % This function calculates the minimum 8-distance between the region of
 % interest (ROI, defined as what is not the background) and the edge of the
-% 3D matrix.
-% The method is based on two spanning of the matrixes and at each point we
-% are comparing the distance in the current point with the distances in the
-% neighbours + 1, where the neighbours are up and left then down and right,
-% with the spanning of the matrix respectively frome the upper left and the
-% lower right.
+% 3D matrix. The method is based on two spanning of the matrixes and at
+% each point the distance at the current point is compared with the
+% distances + 1 in the neighbours, where the neighbours are up and left
+% then down and right, with the spanning of the matrix respectively from
+% the upper left and the lower right.
+%
+% This function can be slow, there are certainly improvements to make.
 %
 % _SYNTAX_
 % 
@@ -28,6 +29,7 @@ function [distROI, d8_matrix] = calc_dist_ROI(matrix)
 %     element and the edges of the volume.
 %   d8_matrix
 %     The matrix of the 8-distances in the matrix.
+
 disp('Calculation dist ROI ...')
 dimMatrix = size(matrix);
 
@@ -72,5 +74,5 @@ d8_matrix = d8_matrix(2:dimMatrix(1) + 1, 2:dimMatrix(2) + 1, 2:dimMatrix(3) + 1
             min(d8_matrix(:, :, end), [], 'all') ...
             min(d8_matrix(:, end, :), [], 'all') ...
             min(d8_matrix(end, :, :), [], 'all')]);
-
+disp('end.')
 end
