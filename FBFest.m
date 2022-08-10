@@ -194,6 +194,7 @@ classdef FBFest < handle
                case 'Zubal'
                    obj.dim_with_buffer = [512, 512, 512]; % [256, 256, 384] voxels added
                case ''
+                   warning('No type and no buffer dimension given for FBFest estimation - empirical buffer used')
                    obj.dim_with_buffer = 2 * obj.matrix; % TODO
            end
         end
