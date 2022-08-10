@@ -41,13 +41,14 @@ dim_pad = 2;  % dim_pad pixels will be added in each direction TODO adapted to s
 gauss_3D = gaussmf(kx, [sigmaFilter(1), 0]) .* gaussmf(ky, [sigmaFilter(2), 0]) .* gaussmf(kz, [sigmaFilter(3), 0]);
 
 % FFT with padding, filtering and IFFT
-vol_fft = fftshift(fftn(fftshift(padarray(volume, [dim_pad dim_pad dim_pad], volume(1, 1, 1), 'symmetric'))));
-vol_filt = ifftshift(ifftn(ifftshift(vol_fft .* gauss_3D)));
-% Trumcate padding
+vol_fft = fftn(padarray(volume, [dim_pad dim_pad dim_pad], volume(1, 1, 1), 'symmetric'));
+vol_filt = real(ifftn(vol_fft .* fftshift(gauss_3D)));
+% Truncate padding
 vol_filt = vol_filt(dim_pad + 1: end - dim_pad, dim_pad + 1: end - dim_pad, dim_pad + 1: end - dim_pad);
 
 %% Down sampling
-
-vol_lowRes = vol_filt(1:factor(1):end, 1:factor(2):end, 1:factor(3):end);
+phase = rem(floor(dim / 2)+1, factor); % phase is chosen to be sure to keep the centerj
+phase(phase == 0) = factor(phase == 0);
+vol_lowRes = vol_filt(phase(1):factor(1):end, phase(2):factor(2):end, phase(3):factor(3):end);
 
 end
