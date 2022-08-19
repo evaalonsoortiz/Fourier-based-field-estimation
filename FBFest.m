@@ -15,7 +15,7 @@ classdef FBFest < handle
         function obj = FBFest(type, sus, image_res, matrix, sus_ext, varargin )
             % Method FBFest (constructor)
             % type      : the type of the phantom : 'spherical',
-            % 'cylindrical', 'Zubal', or '' for an other phantom
+            % 'cylindrical', 'Zubal', 'Shepp-Logan' or '' for an other phantom
             % sus       : the 3D distribution of susceptibility
             % image_res : a vector of the resolution in the 3 directions
             % matrix    : a vector of the dimensions of the field_view (matching sus dimensions)
@@ -87,7 +87,12 @@ classdef FBFest < handle
                    obj.dim_with_buffer = obj.matrix; % TODO
                case 'Zubal'
                    obj.dim_with_buffer = [512, 512, 512]; % [256, 256, 384] voxels added
+               case 'Shepp-Logan'
+                   obj.dim_with_buffer = 2 * obj.matrix; % todo : optimize
                case ''
+                   warning('No type and no buffer dimension given for FBFest estimation - empirical buffer used')
+                   obj.dim_with_buffer = 2 * obj.matrix; % TODO
+               otherwise
                    warning('No type and no buffer dimension given for FBFest estimation - empirical buffer used')
                    obj.dim_with_buffer = 2 * obj.matrix; % TODO
            end
