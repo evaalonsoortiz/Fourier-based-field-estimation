@@ -3,8 +3,6 @@ The **ChiDist** class has 4 subclasses (**SheppLogan**, **Spherical**, **Cylindr
 
 **FBFest.m** can be used to calculate the magnetic field offset produced by susceptibility distribution subject to a uniform external magnetic field B0 that is orientated along the z-axis.
 
-A folder **tests_calc_dbz** includes three scripts that have been used for testing and fixing the _dbz_calc_ method of FBFest, and to quantify the effect of different padding sizes on different phantoms. Some figures from the experiments are stored. These scipts have evolveed a lot during successive experiment and versions of the code and are thus less clean but can be useful to make further experiments. Further documentation is available in the repository.
-
 ## References :
 
 J.P. MARQUES, R. BOWTELL Concepts in Magnetic Resonance Part B (Magnetic Resonance Engineering), Vol. 25B(1) 65-78 (2005)
