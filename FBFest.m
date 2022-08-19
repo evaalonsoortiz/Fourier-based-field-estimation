@@ -5,15 +5,14 @@ classdef FBFest < handle
         matrix
         dim_with_buffer
         image_res
-        volume % [T]
+        volume % [T] The field variation is in unit of B0, so needs to be multiplied by the stength field B0 if necessary
         sus % USI (not ppm)
         type
         sus_ext % USI (not ppm)
-        b0 % [T]
     end
     
     methods
-        function obj = FBFest(type, sus, image_res, matrix, sus_ext, b0, varargin )
+        function obj = FBFest(type, sus, image_res, matrix, sus_ext, varargin )
             % Method FBFest (constructor)
             % type      : the type of the phantom : 'spherical',
             % 'cylindrical', 'Zubal', or '' for an other phantom
@@ -23,17 +22,14 @@ classdef FBFest < handle
             % sus_ext   : a scalar, the susceptibility of the external medium
             %              (the region of interest is assumed to be surrounded
             %              by a region of infinite extent whose susceptibility is sus_ext)
-            % b0        : b0 strength in Teslas
             % varargin  : a dimension with the buffer can be chosen
             obj.type = type;
             obj.matrix  = matrix ;
             obj.image_res  = image_res ;
             obj.sus  = sus ;
-            obj.sus_ext = sus_ext;
-            obj.b0 = b0 ;
+            obj.sus_ext = sus_ext;            
             
-            
-            if nargin > 6
+            if nargin > 5
                 obj.dim_with_buffer = varargin{1};
             else
                 obj.calc_buffer();
@@ -62,8 +58,8 @@ classdef FBFest < handle
             % make sure that the k-space window is the same that the
             % one of the fft of susceptibility
             k2 = kx.^2 + ky.^2 + kz.^2;
-            kernel = fftshift(obj.b0 * (1/3 - kz.^2./k2)); 
-            kernel(1, 1, 1) = obj.b0 / 3;
+            kernel = fftshift(1/3 - kz.^2./k2); % For B0 = 1T
+            kernel(1, 1, 1) = 1 / 3; % for B0 = 1T
 
             % compute the fourier transform of the susceptibility
             % distribution using the linearity of the FT
@@ -129,7 +125,7 @@ classdef FBFest < handle
                     if strcmp(obj.type,'Zubal')
                         nii_vol = make_nii(real(1e6*vol)); % save real part in ppm
                     else
-                        nii_vol = make_nii(imrotate(fliplr(real(1e6*vol)), -90)); % save real part in ppm
+                        nii_vol = make_nii(imrotate(fliplr(real(1e6*vol)), -90)); % save in ppm with a rotation to have a vertical z axis
                     end
                        
                     %set image resolution in nifti header
