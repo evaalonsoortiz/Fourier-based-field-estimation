@@ -5,7 +5,7 @@
 
 %clearvars;
 
-phantom = "sphere"
+phantom = "cylinder"
 switch(phantom)
 %%  An anisotropic rectangular susceptibility in a "little" volume
     case "rect" 
@@ -35,17 +35,17 @@ switch(phantom)
 %% A cylinder
     case "cylinder"
         dim_without_buffer = [128, 128, 128];
-        dim = [128, 128, 128]; % Multiply the dim_without_buffer by a power of 2
+        dim = [256, 256, 256]; % Multiply the dim_without_buffer by a power of 2
         res = [1, 1, 1]; % volume unit
-        susin = -0.72e-6; 
-        susout = -0.36e-6; 
+        susin = 1; % -0.72e-6; 
+        susout = 0; %-0.36e-6; 
         radius = 12 % volume unit
-        theta = 0 % rad, tilt of the cylinder between B0 and y
-        phi = pi/2 % angle between x and measure axis in the xy plane (pi/2 for measure along y, 0 for measure along z)
+        theta = pi/2 % rad, tilt of the cylinder between B0 and y
+        phi = 0; %pi/2 % angle between x and measure axis in the xy plane (pi/2 for measure along y, 0 for measure along z)
         sus_dist = Cylindrical(dim_without_buffer, res, radius, theta, [susin susout]);
         sus = sus_dist.volume;
-        sus = padarray(sus, (dim - dim_without_buffer) / 2, susout, 'post');
-        sus = padarray(sus, (dim - dim_without_buffer) / 2, susout, 'pre');
+%         sus = padarray(sus, (dim - dim_without_buffer) / 2, susout, 'post');
+%         sus = padarray(sus, (dim - dim_without_buffer) / 2, susout, 'pre');
         type = 'cylindrical';
 
 %% A sphere with a bigger volume (add a buffer)
@@ -72,7 +72,7 @@ padDim = dim - dim_without_buffer;
 
 %% Analytical solution
 
-[x,y,z] = ndgrid(linspace(-dim(1)/2, dim(1) / 2, dim(1)), linspace(-dim(2)/2, dim(2) / 2 , dim(2)), linspace(-dim(3)/2, dim(3) / 2, dim(3)));
+[x,y,z] = ndgrid(linspace(-dim_without_buffer(1)/2, dim_without_buffer(1) / 2, dim_without_buffer(1)), linspace(-dim_without_buffer(2)/2, dim_without_buffer(2) / 2 , dim_without_buffer(2)), linspace(-dim_without_buffer(3)/2, dim_without_buffer(3) / 2, dim_without_buffer(3)));
 r = sqrt(x.^2 + y.^2 + z.^2);
 tic
 if (strcmp(phantom, 'sphere') || strcmp(phantom, 'sphere_buffer'))
@@ -80,17 +80,17 @@ if (strcmp(phantom, 'sphere') || strcmp(phantom, 'sphere_buffer'))
     dbz_out = (susin - susout) / 3 .* (radius ./ r).^3 .* (3 .* z.^2 ./ r.^2 - 1) + susout * b0 / 3;
     dbz_out(isnan(dbz_out)) = susout * b0 / 3;
     %dbz_in  = zeros(dim) - susout * b0 / 3;
-    dbz_in  = zeros(dim) + (susout + susout*susin) * b0 / (3 + 2 * susout + susin); % Shift from article FBM
+    dbz_in  = zeros(dim_without_buffer) + (susout + susout*susin) * b0 / (3 + 2 * susout + susin); % Shift from article FBM
 
     % Create a mask to use the expressions of inside and outside
     % effectively in the sphere an outside
-    mask = Spherical(dim, res, radius, [1 0]);
+    mask = Spherical(dim_without_buffer, res, radius, [1 0]);
     dbz_in = dbz_in .* mask.volume;
     dbz_out = dbz_out .* (1 - mask.volume);
 
     dbz_analytical = dbz_in + dbz_out;
     
-    %ppm and trouncate
+    %ppm and troncate
     dbz_analytical_ppm = dbz_analytical( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3)) * 1e6;
     
         
@@ -98,13 +98,13 @@ elseif (strcmp(phantom, 'cylinder'))
     % with Lorentz correction  (p. 753)
     dbz_out = (susin - susout) / 2 .* (radius ./ r).^2 * sin(theta)^2 * cos(2*phi) *b0 + susout * b0 / 3;
     dbz_out(isnan(dbz_out)) = susout * b0 / 3;
-    dbz_in  = zeros(dim) + (susin - susout) /6 * b0 * ( 3*cos(theta) - 1)  + susout * b0 / 3;
+    dbz_in  = zeros(dim_without_buffer) + (susin - susout) /6 * b0 * ( 3*cos(theta) - 1)  + susout * b0 / 3;
 
     % Equivalent to a cylindrical mask because all the measures are
     % done through the center (the axes in the analytical solution and
     % simulation are not identically defined so the cylindrical mask
     % does not suit), EXCEPT FOR THE AXIS PARALLEL TO THE CYLINDER AXES
-    mask = Cylindrical(dim, res, radius, theta, [1 0]);
+    mask = Cylindrical(dim_without_buffer, res, radius, theta, [1 0]);
     dbz_in = dbz_in .* mask.volume;
     dbz_out = dbz_out .* (1 - mask.volume);
 
@@ -116,9 +116,9 @@ toc
         
 %% Variation calculation
 tic 
-dBz_obj = FBFest(type, sus, res, dim_without_buffer, sus(1, 1, 1), b0, dim); % ( sus, image_res, matrix, sus_ext, b0, dim_with_buff, varargin )
+dBz_obj = FBFest(type, sus, res, dim_without_buffer, sus(1, 1, 1), dim); % ( sus, image_res, matrix, sus_ext, b0, dim_with_buff, varargin )
 toc
-dBz_map_ppm = dBz_obj.volume * 1e6;
+dBz_map_ppm = dBz_obj.volume * b0 * 1e6;
 
 %% Plot intermediate results
 % figure; imagesc(squeeze((1/3-k_scaling_coeff(:, :, sectionz)))); colorbar;
@@ -194,3 +194,18 @@ sgtitle(sprintf('y section, index %u, %s, radius %u', sectiony, 'sphere', radius
 % legend('Analytical', 'simulation 128^3', 'simulation 256^3', 'simulation 512^3');
 % title(sprintf('Field in the %s phantom in ppm along y axis with susin=%0.2e and susout=%0.2e', phantom, susin, susout))
 % 
+
+figure;
+plot(squeeze(anal(sectionx, sectiony, :)), 'LineWidth', 1);
+hold on
+plot(1:128, squeeze(dbz_128_z_cyly(sectionx, sectiony, :)), 'LineWidth', 1);
+hold on
+plot(1:128, squeeze( dbz_xz256_z_cyly(sectionx, sectiony, :)), 'LineWidth', 1);
+hold on
+plot(1:128, squeeze( dbz_xyz256_z_cyly(sectionx, sectiony, :)), 'LineWidth', 1);
+hold off
+xlabel('y position')
+ylabel('dBz (ppm)')
+legend('Analytical', 'simulation 128^3', 'simulation 256x128x256', 'simulation 256^3');
+title(sprintf('Field in the %s phantom in ppmfor theta = pi/2 with susin=1 and susout=0', phantom))
+grid on
