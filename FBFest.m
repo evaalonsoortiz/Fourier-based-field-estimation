@@ -79,7 +79,9 @@ classdef FBFest < handle
         function obj = calc_buffer(obj)
            switch(obj.type)
                case 'spherical'
+                   disp('Calculation dist ROI to have a defaul buffer size...')
                    [dist_ROI, ] = calc_dist_ROI(obj.sus);
+                   disp('ended.')
                    diam_approx = obj.matrix(1) - 2 * dist_ROI;
                    side = max([pow2(nextpow2(5 * diam_approx)), obj.matrix(1)]); 
                    obj.dim_with_buffer = [side, side, side]; % TODO

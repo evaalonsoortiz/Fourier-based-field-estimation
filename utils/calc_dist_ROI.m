@@ -30,7 +30,6 @@ function [distROI, d8_matrix] = calc_dist_ROI(matrix)
 %   d8_matrix
 %     The matrix of the 8-distances in the matrix.
 
-disp('Calculation dist ROI ...')
 dimMatrix = size(matrix);
 
 %% Initialisation of the matrix of distances
