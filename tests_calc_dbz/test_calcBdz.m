@@ -177,35 +177,20 @@ title('Simulation of the field variation');
 sgtitle(sprintf('y section, index %u, %s, radius %u', sectiony, 'sphere', radius))
 
 %% Plots to compare successive buffers
-% Run 3 simulations to store the results in the correct names. Make sure
-% the analytical result used has the maximum resolution
+% Run 3 simulations to store the results under the correct names. Make sure
+% the analytical matrix of the variation used has the maximum resolution.
 
 % figure;
-% plot(squeeze(dBz_analytical_ppm(512/2+1, (512-128)/2+1:(512-128)/2+128, 512/2+1 )), 'LineWidth', 1);
+% plot(squeeze(anal(sectionx, sectiony, :)), 'LineWidth', 1);
 % hold on
-% plot(1:128, squeeze(dBz_map_ppm_128(128/2+1, :, 128/2+1)), 'LineWidth', 1);
+% plot(1:128, squeeze(dbz_128_z_cyly(sectionx, sectiony, :)), 'LineWidth', 1);
 % hold on
-% plot(1:128, squeeze(dBz_map_ppm_256(256/2+1, (256-128)/2+1:(256-128)/2+128, 256/2+1 )), 'LineWidth', 1);
+% plot(1:128, squeeze( dbz_xz256_z_cyly(sectionx, sectiony, :)), 'LineWidth', 1);
 % hold on
-% plot(1:128, squeeze(dBz_map_ppm_r48_512(512/2+1, (512-128)/2+1:(512-128)/2+128, 512/2+1 )), 'LineWidth', 1);
+% plot(1:128, squeeze( dbz_xyz256_z_cyly(sectionx, sectiony, :)), 'LineWidth', 1);
 % hold off
-% xlabel('grid position')
+% xlabel('y position')
 % ylabel('dBz (ppm)')
-% legend('Analytical', 'simulation 128^3', 'simulation 256^3', 'simulation 512^3');
-% title(sprintf('Field in the %s phantom in ppm along y axis with susin=%0.2e and susout=%0.2e', phantom, susin, susout))
-% 
-
-figure;
-plot(squeeze(anal(sectionx, sectiony, :)), 'LineWidth', 1);
-hold on
-plot(1:128, squeeze(dbz_128_z_cyly(sectionx, sectiony, :)), 'LineWidth', 1);
-hold on
-plot(1:128, squeeze( dbz_xz256_z_cyly(sectionx, sectiony, :)), 'LineWidth', 1);
-hold on
-plot(1:128, squeeze( dbz_xyz256_z_cyly(sectionx, sectiony, :)), 'LineWidth', 1);
-hold off
-xlabel('y position')
-ylabel('dBz (ppm)')
-legend('Analytical', 'simulation 128^3', 'simulation 256x128x256', 'simulation 256^3');
-title(sprintf('Field in the %s phantom in ppmfor theta = pi/2 with susin=1 and susout=0', phantom))
-grid on
+% legend('Analytical', 'simulation 128^3', 'simulation 256x128x256', 'simulation 256^3');
+% title(sprintf('Field in the %s phantom in ppm for theta = pi/2 with susin=1 and susout=0', phantom))
+% grid on
