@@ -9,11 +9,10 @@ classdef FBFest < handle
         sus % USI (not ppm)
         type
         sus_ext % USI (not ppm)
-        b0 %[T]
     end
     
     methods
-        function obj = FBFest(type, sus, image_res, matrix, sus_ext, b0, varargin)
+        function obj = FBFest(type, sus, image_res, matrix, sus_ext, varargin )
             % Method FBFest (constructor)
             % type      : the type of the phantom : 'spherical',
             % 'cylindrical', 'Zubal', 'Shepp-Logan' or '' for an other phantom
@@ -23,17 +22,14 @@ classdef FBFest < handle
             % sus_ext   : a scalar, the susceptibility of the external medium
             %              (the region of interest is assumed to be surrounded
             %              by a region of infinite extent whose susceptibility is sus_ext)
-            % b0 : field strength [T]
             % varargin  : a dimension with the buffer can be chosen
-            
             obj.type = type;
             obj.matrix  = matrix ;
             obj.image_res  = image_res ;
             obj.sus  = sus ;
-            obj.sus_ext = sus_ext;  
-            obj.b0 = b0;
+            obj.sus_ext = sus_ext;            
             
-            if nargin > 5 % nargin is number of input arguments
+            if nargin > 5
                 obj.dim_with_buffer = varargin{1};
             else
                 obj.calc_buffer();
@@ -62,14 +58,13 @@ classdef FBFest < handle
             % make sure that the k-space window is the same that the
             % one of the fft of susceptibility
             k2 = kx.^2 + ky.^2 + kz.^2;
-            kernel = fftshift(1/3 - kz.^2./k2) * obj.b0; 
-            kernel(1, 1, 1) = 1 / 3 * obj.b0; 
+            kernel = fftshift(1/3 - kz.^2./k2); % For B0 = 1T
+            kernel(1, 1, 1) = 1 / 3; % for B0 = 1T
 
             % compute the fourier transform of the susceptibility
             % distribution using the linearity of the FT
             FT_chi = fftn(obj.sus - obj.sus_ext, obj.dim_with_buffer); % region of interest
             FT_chi(1, 1, 1) = FT_chi(1,1,1) + prod(obj.dim_with_buffer) * obj.sus_ext; % external susceptibility at k=0
-                                                % N * chi_e = constant value at k = 0
 
             % compute Bdz (the z-component of the magnetic field due to a
             % sphere, relative to B0) FFT. 
@@ -84,7 +79,7 @@ classdef FBFest < handle
         function obj = calc_buffer(obj)
            switch(obj.type)
                case 'spherical'
-                   disp('Calculation dist ROI to have a default buffer size...')
+                   disp('Calculation dist ROI to have a defaul buffer size...')
                    [dist_ROI, ] = calc_dist_ROI(obj.sus);
                    disp('ended.')
                    diam_approx = obj.matrix(1) - 2 * dist_ROI;
