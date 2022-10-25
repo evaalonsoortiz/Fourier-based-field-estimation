@@ -31,9 +31,9 @@
           obj.volume(r > obj.R ) = obj.sus(2);
           
           % rotate chi distribution about the y-axis
-          t = [cos(obj.theta)  0      -sin(obj.theta)   0
+          t = [cos(obj.theta)  0      sin(obj.theta)   0
               0             1              0     0
-              sin(obj.theta)    0       cos(obj.theta)   0
+              -sin(obj.theta)    0       cos(obj.theta)   0
               0             0              0     1];
           tform = affine3d(t);
           obj.volume = imwarp(obj.volume,tform, 'FillValues', obj.sus(2));

@@ -5,10 +5,10 @@ classdef FBFest < handle
         matrix
         dim_with_buffer
         image_res
-        volume % [T] The field variation is in unit of B0, so needs to be multiplied by the stength field B0 if necessary
-        sus % USI (not ppm)
+        volume % [T] The field variation is in unit of B0, so needs to be multiplied by the strength field B0 if necessary
+        sus % SI unit (not ppm)
         type
-        sus_ext % USI (not ppm)
+        sus_ext % SI unit (not ppm)
     end
     
     methods
@@ -37,6 +37,7 @@ classdef FBFest < handle
             
             obj.volume = zeros(obj.matrix(1), obj.matrix(2), obj.matrix(3));
             obj.calc_dBz();
+            %obj.plot()
         end
         
         function obj = calc_dBz(obj)
@@ -79,7 +80,7 @@ classdef FBFest < handle
         function obj = calc_buffer(obj)
            switch(obj.type)
                case 'spherical'
-                   disp('Calculation dist ROI to have a defaul buffer size...')
+                   disp('Calculation dist ROI to have a default buffer size...')
                    [dist_ROI, ] = calc_dist_ROI(obj.sus);
                    disp('ended.')
                    diam_approx = obj.matrix(1) - 2 * dist_ROI;
