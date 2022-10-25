@@ -5,7 +5,7 @@
 
 %clearvars;
 
-phantom = "sphereLore";
+phantom = "sphere";
 switch(phantom)
 %%  An anisotropic rectangular susceptibility in a "little" volume
     case "rect" 
@@ -20,30 +20,16 @@ switch(phantom)
         
 %% A sphere
     case "sphere"
-        dim = [256 256 256];
+        dim = [256, 256, 256];
+        %dim_without_buffer = dim;
         res = [1, 1, 1]; % volume unit
         susin = -0.72e-6; 
         susout = -0.36e-6; 
-        radius = 48; % volume unit
+        radius = 12; % volume unit
         sus_dist = Spherical(dim , res, radius, [susin susout]);
         %sus = sub_sample_3D(sus_dist.volume, [2, 2, 2]); % TEST sub sampling
-        %dim = size(sus); 
         sus = sus_dist.volume;
-        dim_without_buffer = size(sus);
-        type = 'spherical';
-        radius = radius/2;
-
-    case "sphereLore"
-        dim = [256 256 256];
-        dim_without_buffer = [256 256 256]; %Lore
-        res = [1, 1, 1]; % volume unit
-        susin = -0.72e-6; 
-        susout = -0.36e-6; 
-        radius = 48; % volume unit
-        sus_dist = Spherical(dim , res, radius, [susin susout]);
-        sus = sus_dist.volume;
-        %sus = sub_sample_3D(sus_dist.volume, [2, 2, 2]); % TEST sub sampling
-        %dim = size(sus); dim_without_buffer = size(sus);
+        dim = size(sus); dim_without_buffer = size(sus);
         type = 'spherical';
         %radius = radius/2;
         
@@ -63,29 +49,14 @@ switch(phantom)
 %         sus = padarray(sus, (dim - dim_without_buffer) / 2, susout, 'pre');
         type = 'cylindrical';
 
-%% A cylinder
-    case "cylinderLore"
-        dim_without_buffer = [256, 256, 256];
-        dim = [256, 256, 256]; % Multiply the dim_without_buffer by a power of 2
-        res = [1, 1, 1]; % volume unit
-        susin = 1; % -0.72e-6; 
-        susout = 0; %-0.36e-6; 
-        radius = 12 % volume unit
-        theta = pi/2 % rad, tilt of the cylinder between B0 and y
-        phi = 0; %pi/2 % angle between x and measure axis in the xy plane (pi/2 for measure along y, 0 for measure along z)
-        sus_dist = Cylindrical(dim_without_buffer, res, radius, theta, [susin susout]);
-        sus = sus_dist.volume;
-        type = 'cylindrical';
-
-
 %% A sphere with a bigger volume (add a buffer)
     case "sphere_buffer"
         dim_without_buffer = [128, 128, 128];
-        dim = 2*dim_without_buffer; % Multiply by a power of 2
+        dim = 1*dim_without_buffer; % Multiply by a power of 2
         res = [1, 1, 1]; % volume unit
         susin = -0.72e-6; 
         susout = -0.36e-6;
-        radius = 48; % volume unit
+        radius = 48 % volume unit
         sus_dist = Spherical(dim_without_buffer , res, radius, [susin susout]);
         sus = sus_dist.volume;
         sus = padarray(sus, (dim - dim_without_buffer) / 2, susout, 'post');
@@ -105,12 +76,12 @@ padDim = dim - dim_without_buffer;
 [x,y,z] = ndgrid(linspace(-dim_without_buffer(1)/2, dim_without_buffer(1) / 2, dim_without_buffer(1)), linspace(-dim_without_buffer(2)/2, dim_without_buffer(2) / 2 , dim_without_buffer(2)), linspace(-dim_without_buffer(3)/2, dim_without_buffer(3) / 2, dim_without_buffer(3)));
 r = sqrt(x.^2 + y.^2 + z.^2);
 tic
-if (strcmp(phantom, 'sphere') || strcmp(phantom, 'sphere_buffer') || strcmp(phantom, 'sphereLore'))
+if (strcmp(phantom, 'sphere') || strcmp(phantom, 'sphere_buffer'))
     % with Lorentz correction  (p. 753)
     dbz_out = (susin - susout) / 3 .* (radius ./ r).^3 .* (3 .* z.^2 ./ r.^2 - 1) + susout * b0 / 3;
     dbz_out(isnan(dbz_out)) = susout * b0 / 3;
-    %dbz_in  = zeros(dim) - susout * b0 / 3;
-    dbz_in  = zeros(dim_without_buffer) + (susout + susout*susin) * b0 / (3 + 2 * susout + susin); % Shift from article FBM
+    dbz_in  = susout * b0 / 3;
+    %dbz_in  = zeros(dim_without_buffer) + (susout + susout*susin) * b0 / (3 + 2 * susout + susin); % Shift from article FBM
 
     % Create a mask to use the expressions of inside and outside
     % effectively in the sphere an outside
@@ -122,9 +93,9 @@ if (strcmp(phantom, 'sphere') || strcmp(phantom, 'sphere_buffer') || strcmp(phan
     
     %ppm and troncate
     dbz_analytical_ppm = dbz_analytical( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3)) * 1e6;
-    %dbz_analytical_ppm = dbz_analytical(1:dim_without_buffer(1), 1:dim_without_buffer(2), 1:dim_without_buffer(3)) * 1e6;
+    
         
-elseif (strcmp(phantom, 'cylinder') || strcmp(phantom, 'cylinderLore'))
+elseif (strcmp(phantom, 'cylinder'))
     % with Lorentz correction  (p. 753)
     dbz_out = (susin - susout) / 2 .* (radius ./ r).^2 * sin(theta)^2 * cos(2*phi) *b0 + susout * b0 / 3;
     dbz_out(isnan(dbz_out)) = susout * b0 / 3;
@@ -146,7 +117,7 @@ toc
         
 %% Variation calculation
 tic 
-dBz_obj = FBFest(type, sus, res, dim_without_buffer, sus(1, 1, 1), b0, dim); % ( sus, image_res, matrix, sus_ext, b0, dim_with_buff, varargin )
+dBz_obj = FBFest(type, sus, res, dim_without_buffer, sus(1, 1, 1), dim); % ( sus, image_res, matrix, sus_ext, b0, dim_with_buff, varargin )
 toc
 dBz_map_ppm = dBz_obj.volume * b0 * 1e6;
 
@@ -199,12 +170,10 @@ figure;
 subplot(2, 1, 1);
 imagesc(squeeze(sus(:, sectiony, :))); colorbar; % colormap winter;
 title('susceptibility');
-axis equal;
 
 subplot(2, 1, 2);
 imagesc(squeeze(dBz_map_ppm(:, sectiony, :))); colorbar;
 title('Simulation of the field variation');
-axis equal;
 
 sgtitle(sprintf('y section, index %u, %s, radius %u', sectiony, 'sphere', radius))
 
