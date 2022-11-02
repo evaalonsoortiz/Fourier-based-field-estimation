@@ -5,7 +5,13 @@
 
 %clearvars;
 
-phantom = "cylinder";
+%% Choose variables for simulation
+phantom = "cylinder"; % choose phantom shape: rect, sphere, cylinder, ...
+field = "demodulated"; % choose field: offset or demodulated
+unit = "Hz"; % choose unit: ppm or Hz
+
+
+
 switch(phantom)
 %%  An anisotropic rectangular susceptibility in a "little" volume
     case "rect" 
@@ -28,15 +34,13 @@ switch(phantom)
         radius = 10; % volume unit
         sus_dist = Spherical(dim , res, radius, [susin susout]);
         sus = sus_dist.volume;
-        %sus = sub_sample_3D(sus_dist.volume, [2, 2, 2]); % TEST sub sampling
-        %dim = size(sus); dim_without_buffer = size(sus);
         type = 'spherical';
         
 %% A cylinder
     case "cylinder"
         res_factor = 1;
         dim_without_buffer = 2*[128, 128, 128];
-        dim = [256, 256, 256]; % Multiply the dim_without_buffer by a power of 2
+        dim = [256, 256, 256]; 
         res = res_factor * [1, 1, 1]; % volume unit
         susin = 3.60e-7; % -0.72e-6; 
         susout = -9.24e-6; %-0.36e-6; 
@@ -45,24 +49,10 @@ switch(phantom)
         phi = 0; %pi/2 % angle between x and measure axis in the xy plane (pi/2 for measure along y, 0 for measure along x)
         sus_dist = Cylindrical(dim_without_buffer, res, radius, theta, [susin susout]);
         sus = sus_dist.volume;
-%         sus = padarray(sus, (dim - dim_without_buffer) / 2, susout, 'post');
-%         sus = padarray(sus, (dim - dim_without_buffer) / 2, susout, 'pre');
         type = 'cylindrical';
 
-%% A sphere with a bigger volume (add a buffer)
-    case "sphere_buffer"
-        dim_without_buffer = [128, 128, 128];
-        dim = 1*dim_without_buffer; % Multiply by a power of 2
-        res = [1, 1, 1]; % volume unit
-        susin = -0.72e-6; 
-        susout = -0.36e-6;
-        radius = 20; % volume unit
-        sus_dist = Spherical(dim_without_buffer , res, radius, [susin susout]);
-        sus = sus_dist.volume;
-        sus = padarray(sus, (dim - dim_without_buffer) / 2, susout, 'post');
-        sus = padarray(sus, (dim - dim_without_buffer) / 2, susout, 'pre');
-        type = 'spherical';
 end
+
 
 % Other parameters
 b0 = 1; %[T]
@@ -80,78 +70,100 @@ padDim = dim - dim_without_buffer;
     linspace(-dim_without_buffer(3)/2 * res(3), dim_without_buffer(3) / 2 * res(3), dim_without_buffer(3)));
 r = sqrt(x.^2 + y.^2 + z.^2);
 tic
-if (strcmp(phantom, 'sphere') || strcmp(phantom, 'sphere_buffer'))
+if (strcmp(phantom, 'sphere'))
     % with Lorentz correction  (p. 753)
-    dbz_out = (susin - susout) / 3 .* (radius ./ r).^3 .* (3 .* z.^2 ./ r.^2 - 1)*b0 + susout * b0 / 3;
-    dbz_out(isnan(dbz_out)) = susout * b0 / 3;
-    dbz_in  = susout * b0 / 3;
+    dBz_out = (susin - susout) / 3 .* (radius ./ r).^3 .* (3 .* z.^2 ./ r.^2 - 1) + susout / 3;
+    dBz_out(isnan(dBz_out)) = susout / 3;
+    dBz_in  = susout / 3;
     %dbz_in  = zeros(dim_without_buffer) + (susout + susout*susin) * b0 / (3 + 2 * susout + susin); % Shift from article FBM
 
     % Create a mask to use the expressions of inside and outside
     % effectively in the sphere an outside
     mask = Spherical(dim_without_buffer, res, radius, [1 0]);
-    dbz_in = dbz_in .* mask.volume;
-    dbz_out = dbz_out .* (1 - mask.volume);
+    dBz_in = dBz_in .* mask.volume;
+    dBz_out = dBz_out .* (1 - mask.volume);
 
-    dbz_analytical = dbz_in + dbz_out;
+    dBz_analytical = dBz_in + dBz_out; % this is the analytical field offset ratio
     
-    % Hz
-    dbz_analytical_Hz = dbz_analytical * b0 * gamma_2pi;
-
     %ppm and troncate
     %dbz_analytical_ppm = dbz_analytical( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3)) * 1e6;
-    dbz_analytical_ppm = dbz_analytical / b0 * 1e6;
+    
         
 elseif (strcmp(phantom, 'cylinder'))
     % with Lorentz correction  (p. 753)
-    dbz_out = (susin - susout) / 2 .* (radius ./ r).^2 * sin(theta)^2 * cos(2*phi) *b0 + susout * b0 / 3;
-    dbz_out(isnan(dbz_out)) = susout * b0 / 3;
-    dbz_in  = zeros(dim_without_buffer) + (susin - susout) /6 * b0 * ( 3*cos(theta) - 1)  + susout * b0 / 3;
+    dBz_out = (susin - susout) / 2 .* (radius ./ r).^2 * sin(theta)^2 * cos(2*phi) + susout / 3;
+    dBz_out(isnan(dBz_out)) = susout / 3;
+    dBz_in  = zeros(dim_without_buffer) + (susin - susout) /6 * ( 3*cos(theta) - 1)  + susout / 3;
 
     % Equivalent to a cylindrical mask because all the measures are
     % done through the center (the axes in the analytical solution and
     % simulation are not identically defined so the cylindrical mask
     % does not suit), EXCEPT FOR THE AXIS PARALLEL TO THE CYLINDER AXES
     mask = Cylindrical(dim_without_buffer, res, radius, theta, [1 0]);
-    dbz_in = dbz_in .* mask.volume;
-    dbz_out = dbz_out .* (1 - mask.volume);
+    dBz_in = dBz_in .* mask.volume;
+    dBz_out = dBz_out .* (1 - mask.volume);
     
-    dbz_analytical = dbz_in + dbz_out;
-
-    % Hz
-    dbz_analytical_Hz = dbz_analytical * gamma_2pi;
-    Bz_analytical_Hz = dbz_analytical_Hz - gamma_2pi * susout/3 * b0;
-    
-    % ppm
-    dbz_analytical_ppm = dbz_analytical / b0 * 1e6;
-    Bz_analytical_ppm = (dbz_analytical - susout/3)*1e6;
+    dBz_analytical = dBz_in + dBz_out; % this is the analytical field offset ratio
     
 end
+
 toc
         
 %% Variation calculation
 tic 
 dBz_obj = FBFest(type, sus, res, dim_without_buffer, sus(1, 1, 1), dim) ; % ( sus, image_res, matrix, sus_ext, b0, dim_with_buff, varargin )
-%dBz_map_ppm = dBz_obj.volume * 1e6;
+
 toc
-dBz = dBz_obj.volume;
+dBz_simulation = dBz_obj.volume; % this is the simulated field offset ratio
 
-dBz_simulation_ppm = dBz * 1e6;
-Bz_simulation_ppm = (dBz - susout/3) *1e6;
 
-dBz_simulation_Hz = dBz * b0 * gamma2pi;
-Bz_simulation_Hz = dBz_simulation_Hz - gamma_2pi * susout/3 * b0;
+% Demodulated field
+if (strcmp(field, 'demodulated'))
+analytical = dBz_analytical - susout/3;
+simulation = dBz_simulation - susout/3;
+end
 
-%% Plot intermediate results
-% figure; imagesc(squeeze((1/3-k_scaling_coeff(:, :, sectionz)))); colorbar;
-% title('Multiplying volume in FT domain, x section')
+% Field offset
+if (strcmp(field, 'offset'))
+analytical = dBz_analytical;
+simulation = dBz_simulation;
+end
 
-% k_ifft = ifftshift(ifftn(ifftshift((1/3 - k_scaling_coeff))));
-% 
-% figure; imagesc(squeeze(k_ifft(sectionx, :, :))), colorbar;
-% title('Ifft of the multiplying volume (spatial domain), x section')
+% Field in Hz
+if (strcmp(unit, 'Hz'))
+analytical = analytical * b0 * gamma_2pi;
+simulation = simulation * b0 * gamma_2pi;
+end
+
+% Field in ppm
+if (strcmp(unit, 'ppm'))
+analytical = analytical * 1e6;
+simulation = simulation * 1e6;
+end
+
+
 
 %% Plots to compare with analytical
+close all
+figure;
+plot(linspace(-dim_without_buffer(2)/2*res(2),dim_without_buffer(2)/2*res(2),dim_without_buffer(2)), ...
+    squeeze(analytical(sectionx, sectiony, :)), ...
+    'LineWidth',5,'Color',[0.6118    0.8824    1.0000],'LineStyle','-');
+hold on
+plot(linspace(-dim_without_buffer(2)/2*res(2),dim_without_buffer(2)/2*res(2),dim_without_buffer(2)), ...
+    squeeze(simulation(sectionx, sectiony, :)), ...
+    'LineWidth',2,'Color',[0, 0.4470, 0.7410]);
+
+hold off
+xlabel('z position [mm]')
+ylabel(sprintf('Field %s [%s]', field, unit))
+legend('Analytical', 'Simulation');
+title(sprintf('Magnetic field %s [%s] in the %s phantom along z axis with susin=%0.2e and susout=%0.2e', field, unit, phantom, susin, susout))
+grid on
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 plotting = 0;
 if plotting == 1
     close all
@@ -189,7 +201,7 @@ if plotting == 1
     legend('Analytical', 'simulation');
     title(sprintf('Field offset in the %s phantom along z axis with susin=%0.2e and susout=%0.2e', phantom, susin, susout))
     grid on
-end
+
 
     %% Plot z-axis [ppm]
     close all
@@ -268,6 +280,9 @@ end
     xlabel('y position [mm]')
     ylabel('x position [mm]')
     axis square
+end    
+
+
     %% Plots to compare successive buffers
     % Run 3 simulations to store the results under the correct names. Make sure
     % the analytical matrix of the variation used has the maximum resolution.
@@ -286,4 +301,13 @@ end
     % legend('Analytical', 'simulation 128^3', 'simulation 256x128x256', 'simulation 256^3');
     % title(sprintf('Field in the %s phantom in ppm for theta = pi/2 with susin=1 and susout=0', phantom))
     % grid on
+
+    %% Plot intermediate results
+% figure; imagesc(squeeze((1/3-k_scaling_coeff(:, :, sectionz)))); colorbar;
+% title('Multiplying volume in FT domain, x section')
+
+% k_ifft = ifftshift(ifftn(ifftshift((1/3 - k_scaling_coeff))));
+% 
+% figure; imagesc(squeeze(k_ifft(sectionx, :, :))), colorbar;
+% title('Ifft of the multiplying volume (spatial domain), x section')
 
