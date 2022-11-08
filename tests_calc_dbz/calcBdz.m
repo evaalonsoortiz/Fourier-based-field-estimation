@@ -8,7 +8,7 @@
 %% Choose variables for simulation
 phantom = "cylinder"; % choose phantom shape: rect, sphere, cylinder, ...
 field = "demodulated"; % choose field: offset or demodulated
-unit = "Hz"; % choose unit: ppm or Hz
+unit = "ppm"; % choose unit: ppm or Hz
 
 
 
@@ -31,8 +31,14 @@ switch(phantom)
         res = [1, 1, 1]; % volume unit
         susin = 0; %-0.72e-6; 
         susout = 1; %-0.36e-6; 
+
+        % if you only have the susceptibility difference then define value here
+        % in this case you can only calculate the demodulated field, if you
+        % have the values for susin and susout you can also calculate the field offset
+        sus_diff = susin - susout;
+
         radius = 10; % volume unit
-        sus_dist = Spherical(dim , res, radius, [susin susout]);
+        sus_dist = Spherical(dim , res, radius, [sus_diff 0]);
         sus = sus_dist.volume;
         type = 'spherical';
         
@@ -42,12 +48,18 @@ switch(phantom)
         dim_without_buffer = 2*[128, 128, 128];
         dim = [256, 256, 256]; 
         res = res_factor * [1, 1, 1]; % volume unit
-        susin = 3.60e-7; % -0.72e-6; 
-        susout = -9.24e-6; %-0.36e-6; 
-        radius = 5.9; % volume unit
+        susin = 3.60e-7;
+        susout = -9.24e-6;
+
+        % if you only have the susceptibility difference then define value here
+        % in this case you can only calculate the demodulated field, if you
+        % have the values for susin and susout you can also calculate the field offset
+        sus_diff =  -9e-6; % susin - susout; 
+    
+        radius = 10; % volume unit
         theta =  pi/2; % rad, tilt of the cylinder between B0 and y
         phi = 0; %pi/2 % angle between x and measure axis in the xy plane (pi/2 for measure along y, 0 for measure along x)
-        sus_dist = Cylindrical(dim_without_buffer, res, radius, theta, [susin susout]);
+        sus_dist = Cylindrical(dim_without_buffer, res, radius, theta, [sus_diff 0]);
         sus = sus_dist.volume;
         type = 'cylindrical';
 
@@ -63,23 +75,26 @@ sectionx = round(dim_without_buffer(1) / 2) + 1;
 padDim = dim - dim_without_buffer;
 
 %% Analytical solution
+res_analytical = [1 1 1];
+[x,y,z] = ndgrid(linspace(-dim_without_buffer(1)/2, dim_without_buffer(1) / 2, dim_without_buffer(1)), ...
+    linspace(-dim_without_buffer(2)/2, dim_without_buffer(2) / 2 , dim_without_buffer(2)), ...
+    linspace(-dim_without_buffer(3)/2, dim_without_buffer(3) / 2, dim_without_buffer(3)));
 
-%[x,y,z] = ndgrid(linspace(-dim_without_buffer(1)/2, dim_without_buffer(1) / 2, dim_without_buffer(1)), linspace(-dim_without_buffer(2)/2, dim_without_buffer(2) / 2 , dim_without_buffer(2)), linspace(-dim_without_buffer(3)/2, dim_without_buffer(3) / 2, dim_without_buffer(3)));
-[x,y,z] = ndgrid(linspace(-dim_without_buffer(1)/2 * res(1), dim_without_buffer(1) / 2 * res(1), dim_without_buffer(1)), ...
-    linspace(-dim_without_buffer(2)/2 * res(2), dim_without_buffer(2) / 2  * res(2), dim_without_buffer(2)), ...
-    linspace(-dim_without_buffer(3)/2 * res(3), dim_without_buffer(3) / 2 * res(3), dim_without_buffer(3)));
+%[x,y,z] = ndgrid(linspace(-dim_without_buffer(1)/2 * res(1), dim_without_buffer(1) / 2 * res(1), dim_without_buffer(1)), ...
+%    linspace(-dim_without_buffer(2)/2 * res(2), dim_without_buffer(2) / 2  * res(2), dim_without_buffer(2)), ...
+%    linspace(-dim_without_buffer(3)/2 * res(3), dim_without_buffer(3) / 2 * res(3), dim_without_buffer(3)));
 r = sqrt(x.^2 + y.^2 + z.^2);
 tic
 if (strcmp(phantom, 'sphere'))
     % with Lorentz correction  (p. 753)
-    dBz_out = (susin - susout) / 3 .* (radius ./ r).^3 .* (3 .* z.^2 ./ r.^2 - 1) + susout / 3;
-    dBz_out(isnan(dBz_out)) = susout / 3;
-    dBz_in  = susout / 3;
+    dBz_out = (sus_diff) / 3 .* (radius ./ r).^3 .* (3 .* z.^2 ./ r.^2 - 1);
+    dBz_out(isnan(dBz_out)) = 0; % because demodulated field, for field offset we add susout/3
+    dBz_in  = 0; 
     %dbz_in  = zeros(dim_without_buffer) + (susout + susout*susin) * b0 / (3 + 2 * susout + susin); % Shift from article FBM
 
     % Create a mask to use the expressions of inside and outside
     % effectively in the sphere an outside
-    mask = Spherical(dim_without_buffer, res, radius, [1 0]);
+    mask = Spherical(dim_without_buffer, res_analytical, radius, [1 0]);
     dBz_in = dBz_in .* mask.volume;
     dBz_out = dBz_out .* (1 - mask.volume);
 
@@ -91,15 +106,15 @@ if (strcmp(phantom, 'sphere'))
         
 elseif (strcmp(phantom, 'cylinder'))
     % with Lorentz correction  (p. 753)
-    dBz_out = (susin - susout) / 2 .* (radius ./ r).^2 * sin(theta)^2 * cos(2*phi) + susout / 3;
-    dBz_out(isnan(dBz_out)) = susout / 3;
-    dBz_in  = zeros(dim_without_buffer) + (susin - susout) /6 * ( 3*cos(theta) - 1)  + susout / 3;
+    dBz_out = (sus_diff) / 2 .* (radius ./ r).^2 * sin(theta)^2 * cos(2*phi);
+    dBz_out(isnan(dBz_out)) = 0;
+    dBz_in  = zeros(dim_without_buffer) + (sus_diff) /6 * ( 3*cos(theta) - 1);
 
     % Equivalent to a cylindrical mask because all the measures are
     % done through the center (the axes in the analytical solution and
     % simulation are not identically defined so the cylindrical mask
     % does not suit), EXCEPT FOR THE AXIS PARALLEL TO THE CYLINDER AXES
-    mask = Cylindrical(dim_without_buffer, res, radius, theta, [1 0]);
+    mask = Cylindrical(dim_without_buffer, res_analytical, radius, theta, [1 0]);
     dBz_in = dBz_in .* mask.volume;
     dBz_out = dBz_out .* (1 - mask.volume);
     
@@ -119,14 +134,14 @@ dBz_simulation = dBz_obj.volume; % this is the simulated field offset ratio
 
 % Demodulated field
 if (strcmp(field, 'demodulated'))
-analytical = dBz_analytical - susout/3;
-simulation = dBz_simulation - susout/3;
+analytical = dBz_analytical;
+simulation = dBz_simulation;
 end
 
 % Field offset
 if (strcmp(field, 'offset'))
-analytical = dBz_analytical;
-simulation = dBz_simulation;
+analytical = dBz_analytical + susout/3;
+simulation = dBz_simulation + susout/3;
 end
 
 % Field in Hz
@@ -146,19 +161,19 @@ end
 %% Plots to compare with analytical
 close all
 figure;
-plot(linspace(-dim_without_buffer(2)/2*res(2),dim_without_buffer(2)/2*res(2),dim_without_buffer(2)), ...
+plot(linspace(-dim_without_buffer(2)/2 * res_analytical(2),dim_without_buffer(2)/2 * res_analytical(2),dim_without_buffer(2)), ...
     squeeze(analytical(sectionx, sectiony, :)), ...
-    'LineWidth',5,'Color',[0.6118    0.8824    1.0000],'LineStyle','-');
+    'LineWidth',3,'Color',[0.55 0.55 0.55],'LineStyle',':');
 hold on
 plot(linspace(-dim_without_buffer(2)/2*res(2),dim_without_buffer(2)/2*res(2),dim_without_buffer(2)), ...
     squeeze(simulation(sectionx, sectiony, :)), ...
-    'LineWidth',2,'Color',[0, 0.4470, 0.7410]);
+    'LineWidth',1.5,'Color','r');
 
 hold off
 xlabel('z position [mm]')
 ylabel(sprintf('Field %s [%s]', field, unit))
 legend('Analytical', 'Simulation');
-title(sprintf('Magnetic field %s [%s] in the %s phantom along z axis with susin=%0.2e and susout=%0.2e', field, unit, phantom, susin, susout))
+title(sprintf('Magnetic field %s [%s] in %s (r=%0.1f mm) along z axis with susin=%0.2e and susout=%0.2e', field, unit, phantom, radius, susin, susout))
 grid on
 
 
