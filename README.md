@@ -41,7 +41,7 @@ From this the average field value can be derived. For $r >> a$ , we can see that
 $$\tilde B_{dz} (k=0) = \frac{1}{3} \chi_e B_0$$
 
 
-### Infinitely long cylinder (|| $B_0$) in an infinite medium
+### Infinitely long cylinder in an infinite medium
 <p align="center">
 <img src="https://user-images.githubusercontent.com/112189990/194596320-76b668d3-5dbd-42f7-881e-e43b82f3653c.png" width="200" height="230">
 </p>
@@ -53,7 +53,7 @@ The same Lorentz corrections and BMS shift apply in case of a cylinder, the deri
 - Internal field: $\frac{1}{6} (\chi_i - \chi_e) \cdot (3\cos^2(\theta) - 1) B_0 + \frac{1}{3} \chi_e B_0$
 - External field: $\frac{1}{2} (\chi_i - \chi_e) \cdot \frac{a^3}{r^3} \sin^2(\theta) \cos(2\phi) B_0 + \frac{1}{3} \chi_e B_0$
 
-If $r>>a$ and $\theta = \frac{\pi}{2}$ (parallel to $B_0$), then the internal and external field again go to a value of $\frac{1}{3} \chi_e B_0$. 
+If $r>>a$ and $\theta = \frac{\pi}{2}$ (cylinder axis || $B_0$), then the internal and external field again go to a value of $\frac{1}{3} \chi_e B_0$. 
 
 ## Overview :
 
