@@ -1,6 +1,6 @@
 cyl_test = Cylindrical([100,100,100] , [1,1,1], 10, pi/2, [1 0]);
-x_section = cyl_test.volume(50,:,:);
-y_section = cyl_test.volume(:,50,:);
+y_section = cyl_test.volume(50,:,:);
+x_section = cyl_test.volume(:,50,:);
 z_section = cyl_test.volume(:,:,50);
 
 figure;

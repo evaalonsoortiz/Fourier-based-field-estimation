@@ -60,12 +60,15 @@ classdef FBFest < handle
             % one of the fft of susceptibility
             k2 = kx.^2 + ky.^2 + kz.^2;
             kernel = fftshift(1/3 - kz.^2./k2); % For B0 = 1T
-            kernel(1, 1, 1) = 1 / 3; % for B0 = 1T
+            kernel(1, 1, 1) = 1/3; % for B0 = 1T
 
             % compute the fourier transform of the susceptibility
             % distribution using the linearity of the FT
-            FT_chi = fftn(obj.sus - obj.sus_ext, obj.dim_with_buffer); % region of interest
-            FT_chi(1, 1, 1) = FT_chi(1,1,1) + prod(obj.dim_with_buffer) * obj.sus_ext; % external susceptibility at k=0
+            FT_chi = fftn(obj.sus, obj.dim_with_buffer);
+            FT_chi(1, 1, 1) = FT_chi(1,1,1) + prod(obj.dim_with_buffer) * obj.sus_ext;
+
+            %FT_chi = fftn(obj.sus - obj.sus_ext, obj.dim_with_buffer); % region of interest
+            %FT_chi(1, 1, 1) = FT_chi(1,1,1) + prod(obj.dim_with_buffer) * obj.sus_ext; % external susceptibility at k=0
 
             % compute Bdz (the z-component of the magnetic field due to a
             % sphere, relative to B0) FFT. 
@@ -87,7 +90,7 @@ classdef FBFest < handle
                    side = max([pow2(nextpow2(5 * diam_approx)), obj.matrix(1)]); 
                    obj.dim_with_buffer = [side, side, side]; % TODO
                case 'cylindrical'
-                   obj.dim_with_buffer = obj.matrix; % TODO
+                   obj.dim_with_buffer = 2 * obj.matrix; % TODO
                case 'Zubal'
                    obj.dim_with_buffer = [512, 512, 512]; % [256, 256, 384] voxels added
                case 'Shepp-Logan'
