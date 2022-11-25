@@ -10,6 +10,8 @@ phantom = "cylinder"; % choose phantom shape: rect, sphere, cylinder, ...
 field = "demodulated"; % choose field: offset or demodulated
 unit = "ppm"; % choose unit: ppm or Hz
 
+
+
 switch(phantom)
 %%  An anisotropic rectangular susceptibility in a "little" volume
     case "rect" 
@@ -24,9 +26,8 @@ switch(phantom)
         
 %% A sphere
     case "sphere"
-        sub_factor = 2;
-        dim_without_buffer = [128, 128, 128];
-        dim = 4*dim_without_buffer;
+        dim = [256, 256, 256];
+        dim_without_buffer = dim;
         res = [1, 1, 1]; % volume unit
         susin = 0; %-0.72e-6; 
         susout = 1e-6; %-0.36e-6; 
@@ -34,29 +35,28 @@ switch(phantom)
         % if you only have the susceptibility difference then define value here
         % in this case you can only calculate the demodulated field, if you
         % have the values for susin and susout you can also calculate the field offset
-        sus_diff = 6e-6; %susin - susout;
+        sus_diff = susin - susout;
 
         radius = 10; % volume unit
-        sus_dist = Spherical(dim_without_buffer, res, radius, [sus_diff 0]);
+        sus_dist = Spherical(dim , res, radius, [sus_diff 0]);
         sus = sus_dist.volume;
         type = 'spherical';
         
 %% A cylinder
     case "cylinder"
-        sub_factor = 2;
-        res_factor = 1;
-        dim_without_buffer = [128, 128, 128];
-        dim = 4*dim_without_buffer; 
+        res_factor = 0.5;
+        dim_without_buffer = 2*[128, 128, 128];
+        dim = [256, 256, 256]; 
         res = res_factor * [1, 1, 1]; % volume unit
-        susin = 3e-6;
-        susout = -3e-6;
+        susin = 3.60e-7;
+        susout = -9.24e-6;
 
         % if you only have the susceptibility difference then define value here
         % in this case you can only calculate the demodulated field, if you
         % have the values for susin and susout you can also calculate the field offset
-        sus_diff =  6e-6; %susin - susout; 
+        sus_diff =  9e-6; % susin - susout; 
     
-        radius = 15; % volume unit
+        radius = 5.9; % volume unit
         theta =  pi/2; % rad, tilt of the cylinder between B0 and z, rotation around y-axis
         phi_x = 0; % angle between x and measure axis in the xy plane
         phi_y = pi/2;
@@ -75,22 +75,17 @@ sectionx = round(dim_without_buffer(2) / 2) + 1;
 sectiony = round(dim_without_buffer(1) / 2) + 1;
 sectionz = round(dim_without_buffer(3) / 2) + 1;
 
-sectionx_subsample = round(dim_without_buffer(2)/sub_factor / 2) + 1;
-sectiony_subsample = round(dim_without_buffer(1)/sub_factor / 2) + 1;
-sectionz_subsample = round(dim_without_buffer(3)/sub_factor / 2) + 1;
-
 padDim = dim - dim_without_buffer;
 
 %% Analytical solution
-res_analytical = 1*[1 1 1];
+factor = 0.5;
+res_analytical = factor*[1 1 1];
+dim_analytical = dim_without_buffer / factor;
 
-[x,y,z] = ndgrid(linspace(-dim_without_buffer(2)/2*res_analytical(2), dim_without_buffer(2) / 2*res_analytical(2), dim_without_buffer(2)), ...
-    linspace(-dim_without_buffer(1)/2*res_analytical(1), dim_without_buffer(1) / 2 *res_analytical(1), dim_without_buffer(1)), ...
-    linspace(-dim_without_buffer(3)/2*res_analytical(3), dim_without_buffer(3) / 2*res_analytical(3), dim_without_buffer(3)));
+[x,y,z] = ndgrid(linspace(-dim_without_buffer(2)/2, dim_without_buffer(2) / 2, dim_without_buffer(2)/factor), ...
+    linspace(-dim_without_buffer(1)/2, dim_without_buffer(1) / 2, dim_without_buffer(1)/factor), ...
+    linspace(-dim_without_buffer(3)/2, dim_without_buffer(3) / 2, dim_without_buffer(3)/factor));
 
-%[x,y,z] = ndgrid(linspace(-dim_without_buffer(1)/2 * res(1), dim_without_buffer(1) / 2 * res(1), dim_without_buffer(1)), ...
-%    linspace(-dim_without_buffer(2)/2 * res(2), dim_without_buffer(2) / 2  * res(2), dim_without_buffer(2)), ...
-%    linspace(-dim_without_buffer(3)/2 * res(3), dim_without_buffer(3) / 2 * res(3), dim_without_buffer(3)));
 r = sqrt(x.^2 + y.^2 + z.^2);
 tic
 if (strcmp(phantom, 'sphere'))
@@ -106,12 +101,11 @@ if (strcmp(phantom, 'sphere'))
     dBz_in = dBz_in .* mask.volume;
     dBz_out = dBz_out .* (1 - mask.volume);
 
-    dBz_analytical_x = dBz_in + dBz_out; % this is the analytical field offset ratio
-    dBz_analytical_y = dBz_in + dBz_out; 
-
+    dBz_analytical = dBz_in + dBz_out; % this is the analytical field offset ratio
+    
     %ppm and troncate
     %dbz_analytical_ppm = dbz_analytical( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3)) * 1e6;
-    %dBz_analytical = dBz_analytical( padDim(1) + 1:dim_without_buffer(1) + padDim(1), padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3));
+    
         
 elseif (strcmp(phantom, 'cylinder'))
     % with Lorentz correction  (p. 753)
@@ -123,13 +117,13 @@ elseif (strcmp(phantom, 'cylinder'))
     dBz_out_y = (sus_diff) / 2 .* (radius ./ r).^2 * sin(theta)^2 * cos(2*phi_y);
     dBz_out_y(isnan(dBz_out_x)) = 0;
 
-    dBz_in  = zeros(dim_without_buffer) + (sus_diff) /6 * ( 3*cos(theta) - 1);
+    dBz_in  = (sus_diff) /6 * ( 3*cos(theta) - 1);
 
     % Equivalent to a cylindrical mask because all the measures are
     % done through the center (the axes in the analytical solution and
     % simulation are not identically defined so the cylindrical mask
     % does not suit), EXCEPT FOR THE AXIS PARALLEL TO THE CYLINDER AXES
-    mask = Cylindrical(dim_without_buffer, res_analytical, radius, theta, [1 0]);
+    mask = Cylindrical(dim_analytical, res_analytical, radius, theta, [1 0]);
     dBz_in = dBz_in .* mask.volume;
     dBz_out_x = dBz_out_x .* (1 - mask.volume);
     dBz_out_y = dBz_out_y .* (1 - mask.volume);
@@ -177,20 +171,19 @@ analytical_y = analytical_y * 1e6;
 simulation = simulation * 1e6;
 end
 
-% Subsample
-simulation = sub_sample_3D(simulation, sub_factor * [1,1,1]);
 
+close all
 
 %% Plots to compare with analytical: 
-close all
+
 % only along z-axis
 figure;
-plot(linspace(-dim_without_buffer(3)/2 * res_analytical(3),dim_without_buffer(3)/2 * res_analytical(3),dim_without_buffer(3)), ...
+plot(linspace(-dim_without_buffer(3)/2 * res_analytical(3),dim_without_buffer(3)/2 * res_analytical(3),dim_without_buffer(3)/factor), ...
     squeeze(analytical_x(sectionx, sectiony, :)), ...
     'LineWidth',3,'Color',[0.55 0.55 0.55],'LineStyle',':');
 hold on
-plot(linspace(-dim_without_buffer(3)/2*res(3),dim_without_buffer(3)/2*res(3),dim_without_buffer(3)/sub_factor), ...
-    squeeze(simulation(sectionx_subsample, sectiony_subsample, :)), ...
+plot(linspace(-dim_without_buffer(3)/2*res(3),dim_without_buffer(3)/2*res(3),dim_without_buffer(3)), ...
+    squeeze(simulation(sectionx, sectiony, :)), ...
     'LineWidth',1.5,'Color','r');
 
 hold off
@@ -203,12 +196,12 @@ grid on
 % for different sections together 
 figure;
 subplot(1, 3, 1);
-plot(linspace(-dim_without_buffer(2)/2 * res_analytical(2),dim_without_buffer(2)/2 * res_analytical(2),dim_without_buffer(2)), ...
+plot(linspace(-dim_without_buffer(2)/2 * res_analytical(2),dim_without_buffer(2)/2 * res_analytical(2),dim_without_buffer(2)/factor), ...
     squeeze(analytical_x(sectiony, :, sectionz)), ...
     'LineWidth',3,'Color',[0.55 0.55 0.55],'LineStyle',':');
 hold on
-plot(linspace(-dim_without_buffer(2)/2*res(2),dim_without_buffer(2)/2*res(2),dim_without_buffer(2)/sub_factor), ...
-    squeeze(simulation(sectiony_subsample, :, sectionz_subsample)), ...
+plot(linspace(-dim_without_buffer(2)/2*res(2),dim_without_buffer(2)/2*res(2),dim_without_buffer(2)), ...
+    squeeze(simulation(sectiony, :, sectionz)), ...
     'LineWidth',1.5,'Color','r');
 
 ylim([-5 5])
@@ -220,12 +213,12 @@ title('Field along x-axis')
 grid on
 
 subplot(1, 3, 2);
-plot(linspace(-dim_without_buffer(1)/2 * res_analytical(1),dim_without_buffer(1)/2 * res_analytical(1),dim_without_buffer(1)), ...
+plot(linspace(-dim_without_buffer(1)/2 * res_analytical(1),dim_without_buffer(1)/2 * res_analytical(1),dim_without_buffer(1)/factor), ...
     squeeze(analytical_y(:, sectionx, sectionz)), ...
     'LineWidth',3,'Color',[0.55 0.55 0.55],'LineStyle',':');
 hold on
-plot(linspace(-dim_without_buffer(1)/2*res(1),dim_without_buffer(1)/2*res(1),dim_without_buffer(1)/sub_factor), ...
-    squeeze(simulation(:, sectionx_subsample, sectionz_subsample)), ...
+plot(linspace(-dim_without_buffer(1)/2*res(1),dim_without_buffer(1)/2*res(1),dim_without_buffer(1)), ...
+    squeeze(simulation(:, sectionx, sectionz)), ...
     'LineWidth',1.5,'Color','r');
 
 hold off
@@ -236,12 +229,12 @@ title('Field along y-axis')
 grid on
 
 subplot(1, 3, 3);
-plot(linspace(-dim_without_buffer(3)/2 * res_analytical(3),dim_without_buffer(3)/2 * res_analytical(3),dim_without_buffer(3)), ...
+plot(linspace(-dim_without_buffer(3)/2 * res_analytical(3),dim_without_buffer(3)/2 * res_analytical(3),dim_without_buffer(3)/factor), ...
     squeeze(analytical_x(sectionx, sectiony, :)), ...
     'LineWidth',3,'Color',[0.55 0.55 0.55],'LineStyle',':');
 hold on
-plot(linspace(-dim_without_buffer(3)/2*res(3),dim_without_buffer(3)/2*res(3),dim_without_buffer(3)/sub_factor), ...
-    squeeze(simulation(sectionx_subsample, sectiony_subsample, :)), ...
+plot(linspace(-dim_without_buffer(3)/2*res(3),dim_without_buffer(3)/2*res(3),dim_without_buffer(3)), ...
+    squeeze(simulation(sectionx, sectiony, :)), ...
     'LineWidth',1.5,'Color','r');
 
 hold off
@@ -291,7 +284,7 @@ axis square
 subplot(2, 3, 4);
 imagesc(linspace(-dim_without_buffer(2)/2*res(2),dim_without_buffer(2)/2*res(2),10), ...
     linspace(-dim_without_buffer(2)/2*res(2),dim_without_buffer(2)/2*res(2),10), ...
-    squeeze(simulation(:, sectionx_subsample, :))); colorbar;
+    squeeze(simulation(:, sectionx, :))); colorbar;
 title('x-section');
 xlim([-radius*4 radius*4])
 ylim([-radius*4 radius*4])
@@ -302,7 +295,7 @@ axis square
 subplot(2, 3, 5);
 imagesc(linspace(-dim_without_buffer(1)/2*res(1),dim_without_buffer(1)/2*res(1),10), ...
     linspace(-dim_without_buffer(1)/2*res(1),dim_without_buffer(1)/2*res(1),10), ...
-    squeeze(simulation(sectiony_subsample, :, :))); colorbar;
+    squeeze(simulation(sectiony, :, :))); colorbar;
 title('y-section');
 xlim([-radius*4 radius*4])
 ylim([-radius*4 radius*4])
@@ -313,7 +306,7 @@ axis square
 subplot(2, 3, 6);
 imagesc(linspace(-dim_without_buffer(3)/2*res(3),dim_without_buffer(3)/2*res(3),10), ...
     linspace(-dim_without_buffer(3)/2*res(3),dim_without_buffer(3)/2*res(3),10), ...
-    squeeze(simulation(:, :, sectionz_subsample))); colorbar;
+    squeeze(simulation(:, :, sectionz))); colorbar;
 title('z-section');
 xlim([-radius*4 radius*4])
 ylim([-radius*4 radius*4])
