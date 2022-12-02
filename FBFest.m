@@ -32,7 +32,7 @@ classdef FBFest < handle
             if nargin > 5
                 obj.dim_with_buffer = varargin{1};
             else
-                obj.calc_buffer();
+                obj.dim_with_buffer = obj.matrix;
             end
             
             obj.volume = zeros(obj.matrix(1), obj.matrix(2), obj.matrix(3));
@@ -67,9 +67,6 @@ classdef FBFest < handle
             FT_chi = fftn(obj.sus, obj.dim_with_buffer);
             FT_chi(1, 1, 1) = FT_chi(1,1,1) + prod(obj.dim_with_buffer) * obj.sus_ext;
 
-            %FT_chi = fftn(obj.sus - obj.sus_ext, obj.dim_with_buffer); % region of interest
-            %FT_chi(1, 1, 1) = FT_chi(1,1,1) + prod(obj.dim_with_buffer) * obj.sus_ext; % external susceptibility at k=0
-
             % compute Bdz (the z-component of the magnetic field due to a
             % sphere, relative to B0) FFT. 
             bdzFFT = kernel .* FT_chi;
@@ -80,30 +77,7 @@ classdef FBFest < handle
             
         end
         
-        function obj = calc_buffer(obj)
-           switch(obj.type)
-               case 'spherical'
-                   disp('Calculation dist ROI to have a default buffer size...')
-                   [dist_ROI, ] = calc_dist_ROI(obj.sus);
-                   disp('ended.')
-                   diam_approx = obj.matrix(1) - 2 * dist_ROI;
-                   side = max([pow2(nextpow2(5 * diam_approx)), obj.matrix(1)]); 
-                   obj.dim_with_buffer = [side, side, side]; % TODO
-               case 'cylindrical'
-                   obj.dim_with_buffer = 2 * obj.matrix; % TODO
-               case 'Zubal'
-                   obj.dim_with_buffer = [512, 512, 512]; % [256, 256, 384] voxels added
-               case 'Shepp-Logan'
-                   obj.dim_with_buffer = 2 * obj.matrix; % todo : optimize
-               case ''
-                   warning('No type and no buffer dimension given for FBFest estimation - empirical buffer used')
-                   obj.dim_with_buffer = 2 * obj.matrix; % TODO
-               otherwise
-                   warning('No type and no buffer dimension given for FBFest estimation - empirical buffer used')
-                   obj.dim_with_buffer = 2 * obj.matrix; % TODO
-           end
-        end
-        
+       
         function vol = save(obj, fileName, saveFormat)
             % Get magnitude data
             % fileName: String. Prefix of filename (without extension)
