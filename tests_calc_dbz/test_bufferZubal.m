@@ -1,4 +1,7 @@
 %% Script to test adding buffers on the Zubal phantom
+
+% add file 'zubal_EAO.nii' to the folder before running this script
+
 % Many rests of precedent simulation (to test linearity, zero padding, with
 % precedent versions of FBFest code...) are remaining but can inspire new
 % experiments
@@ -7,7 +10,7 @@
 %%    TEST BUFFER
 %%
 %% Parameters
-dbz_path = 'NIFTI_save/dbz_ZubalTest'
+dbz_path = 'NIFTI_save/dbz_ZubalTest';
 b0 = 3; % [T]
 %% generate susceptibility distribution for the modified Zubal phantom,
 % previously downloaded
@@ -18,6 +21,7 @@ b0 = 3; % [T]
 zubal_sus_dist = Zubal('zubal_EAO.nii');
 
 dim_without_buffer = zubal_sus_dist.matrix;
+res = zubal_sus_dist.image_res;
 sus = zubal_sus_dist.volume;
 %sus(sus == sus(1, 1, 1)) = sus(1,1,1);
 sus_ext = sus(1,1,1);
@@ -81,7 +85,7 @@ for zi = 1:n
     % tic
 
     t0 = cputime;
-    dBz_obj = FBFest('Zubal', sus, zubal_sus_dist.image_res, dim_without_buffer, sus_ext, b0, [256, 256, 128]);
+    dBz_obj = FBFest('Zubal', sus, res, dim_without_buffer, sus_ext);%, [256, 256, 128]);
     t1 = cputime;
 
 %     FT_chi = fftshift(fftn(fftshift(sus + sus_ext)));
@@ -110,7 +114,7 @@ for zi = 1:n
 %         glob_diffs_sec_notTrunc{zi}(padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3)) = (glob_diffs_sec_notTrunc{zi}(padDim(2) + 1:dim_without_buffer(2) + padDim(2), padDim(3) + 1:dim_without_buffer(3) + padDim(3)) - squeeze(best(xsection, :, :))) .^2;
 
     % Save NIFTI image of the field shift
-    dBz_obj.save(sprintf('%s_y%u_z%u', dbz_path, xy_dims(zi), z_dims(zi)));
+    %dBz_obj.save(sprintf('%s_y%u_z%u', dbz_path, xy_dims(zi), z_dims(zi)));
     dBz_map_ppm = real(dBz_obj.volume * 1e6);
     volumes_trunc{zi} = dBz_map_ppm;
     time(zi) = t1-t0;
@@ -126,6 +130,23 @@ for zi = 1:n
     mean_value(zi) = mean(dBz_map_ppm(:));
 
 end
+
+
+%% Plots: 
+close all
+% only along z-axis
+figure;
+
+plot(linspace(-dim_without_buffer(3)/2*res(3)+ res(3)/2,dim_without_buffer(3)/2*res(3) - res(3)/2,dim_without_buffer(3)/subsample_factor), ...
+    squeeze(dBz_map_ppm(sectionx, sectiony, :)), ...
+    'LineWidth',1.5,'Color','r');
+
+hold off
+xlabel('z position [mm]')
+ylabel(sprintf('Field'))
+grid on
+
+
 %%
 yyaxis left
 figure; plot(z_dims(2:end), it_diffs(2:end), '.-'); %HERE
