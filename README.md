@@ -55,6 +55,13 @@ The same Lorentz corrections and BMS shift apply in case of a cylinder, the deri
 
 If $r>>a$ and $\theta = 0$ (parallel to $B_0$), then the internal and external field again go to a value of $\frac{1}{3} \chi_e B_0$. 
 
+
+### Calculations in FBFest
+This phantom now has to be created, which is essentialy a matrix containing the susceptibility distribution. The **ChiDist** class has 4 subclasses (**SheppLogan**, **Spherical**, **Cylindrical** and **Zubal**), which can be used to simulate the susceptibility distribution arising from a sphere, cylinder, Shepp-Logan or [Zubal phantom](http://noodle.med.yale.edu/zubal/data.htm). 
+
+Usually, only the susceptibility difference is known. This forms no issue because the end results of the demodulated field only depend on the susceptibility difference.
+
+
 ## Overview :
 
 The **ChiDist** class has 4 subclasses (**SheppLogan**, **Spherical**, **Cylindrical** and **Zubal**) and can be used to simulate the susceptibility distribution arising from a sphere, cylinder, Shepp-Logan or [Zubal phantom](http://noodle.med.yale.edu/zubal/data.htm). 
