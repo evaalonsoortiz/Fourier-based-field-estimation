@@ -34,10 +34,16 @@ if (nargin < 3)
     sigmaFilter = dim ./ factor;  
 end
 
-dim_pad = 2;  % dim_pad pixels will be added in each direction TODO adapted to sigma ?
+dim_pad = dim(1)/2;  % dim_pad pixels will be added in each direction TODO adapted to sigma ?
 
 % Gaussian filter
-[kx, ky, kz] = ndgrid(-dim(1)/2 - dim_pad + 1:dim(1)/2 + dim_pad, -dim(2)/2 - dim_pad + 1:dim(2)/2 + dim_pad, -dim(3)/2 - dim_pad + 1:dim(3)/2 + dim_pad);
+%-dim(1)/2 - dim_pad  + 1:dim(1)/2 + dim_pad
+[kx, ky, kz] = ndgrid(...
+    -dim(1)/2 - dim_pad + 1:dim(1)/2 + dim_pad, ...
+    -dim(2)/2 - dim_pad + 1:dim(2)/2 + dim_pad,...
+    -dim(3)/2 - dim_pad + 1:dim(3)/2 + dim_pad);
+
+
 gauss_3D = gaussmf(kx, [sigmaFilter(1), 0]) .* gaussmf(ky, [sigmaFilter(2), 0]) .* gaussmf(kz, [sigmaFilter(3), 0]);
 
 % FFT with padding, filtering and IFFT
@@ -49,6 +55,7 @@ vol_filt = vol_filt(dim_pad + 1: end - dim_pad, dim_pad + 1: end - dim_pad, dim_
 %% Down sampling
 phase = rem(floor(dim / 2)+1, factor); % phase is chosen to be sure to keep the center at the center
 phase(phase == 0) = factor(phase == 0);
-vol_lowRes = vol_filt(phase(1):factor(1):end, phase(2):factor(2):end, phase(3):factor(3):end);
-
+vol_lowRes1 = vol_filt(phase(1):factor(1):end, phase(2):factor(2):end, phase(3):factor(3):end);
+vol_lowRes2 = vol_filt(phase(1)+1:factor(1):end, phase(2)+1:factor(2):end, phase(3)+1:factor(3):end);
+vol_lowRes = (vol_lowRes1 + vol_lowRes2) ./2;
 end
