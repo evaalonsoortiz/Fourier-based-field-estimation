@@ -22,7 +22,7 @@ $$ \tilde B_{dz} (\mathbf{k}) = \tilde \chi (\mathbf{k}) \cdot B_0 \bigg (\frac{
 
 For the zero frequency, $k=0$, this equation is undefined. The value for the zero frequency should be equal to the average field, for which some assumptions have to be made. In this toolbox the assumption is made that we are dealing with one of the following situations:
 - a sphere with radius $a$ and susceptibility $\chi_i$ in an infinite medium of susceptibility $\chi_e$
-- an infinitely long cylinder with the main axis parallel to $B_0$, radius $a$ and susceptibility $\chi_i$ in an infinite medium of susceptibility $\chi_e$
+- an infinitely long cylinder with radius $a$ and susceptibility $\chi_i$ in an infinite medium of susceptibility $\chi_e$
 
 ### Sphere in an infinite medium:
 
@@ -41,7 +41,7 @@ From this the average field value can be derived. For $r >> a$ , we can see that
 $$\tilde B_{dz} (k=0) = \frac{1}{3} \chi_e B_0$$
 
 
-### Infinitely long cylinder (|| $B_0$) in an infinite medium
+### Infinitely long cylinder in an infinite medium
 <p align="center">
 <img src="https://user-images.githubusercontent.com/112189990/194596320-76b668d3-5dbd-42f7-881e-e43b82f3653c.png" width="200" height="230">
 </p>
