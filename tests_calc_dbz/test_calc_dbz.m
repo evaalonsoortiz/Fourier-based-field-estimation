@@ -6,7 +6,7 @@
 %clearvars;
 
 %% Choose variables for simulation
-phantom = "cylinder"; % choose phantom shape: sphere, cylinder, ...
+phantom = "sphere"; % choose phantom shape: sphere, cylinder, ...
 field = "demodulated"; % choose field: offset or demodulated
 unit = "ppm"; % choose unit: ppm or Hz
 
@@ -14,7 +14,7 @@ switch(phantom)
 
 %% A sphere
     case "sphere"
-        subsample_factor = 1; % downsampling of the simulation result to achieve the same resolution as from the scanner
+        subsample_factor = 2; % if = 2: downsampling of the simulation result to achieve the same resolution as from the scanner
         res_factor = 1; % resolution of the phantom [mm]
         
         dim_without_buffer = [128, 128, 128]; % y x z % dimensions of the simulation volume
@@ -31,7 +31,7 @@ switch(phantom)
 
         sus_diff = 9e-6; % OR susin - susout;
 
-        radius = 10; % [mm]
+        radius = 15; % [mm]
 
         sus_dist = Spherical(dim_without_buffer, res, radius, [sus_diff 0]); % phantom is created
         sus = sus_dist.volume; % extract volume matrix from phantom
@@ -39,11 +39,11 @@ switch(phantom)
         
 %% A cylinder
     case "cylinder"
-        subsample_factor = 1; % downsampling of the simulation result to achieve the same resolution as from the scanner
+        subsample_factor = 2; % if = 2: downsampling of the simulation result to achieve the same resolution as from the scanner
         res_factor = 1; % resolution of the phantom [mm]
 
         dim_without_buffer = [128, 128, 128]; % y x z % dimensions of the simulation volume
-        dim = [256 256 256]; % buffered dimensions of the volume, used for the fourier transformation
+        dim = 2*[129, 129, 129]; % buffered dimensions of the volume, used for the fourier transformation
         res = res_factor * [1, 1, 1]; 
 
         susin = 3e-6; % susceptibility of the material
@@ -174,7 +174,6 @@ simulation = simulation * 1e6;
 end
 
 % Subsample
-
 if subsample_factor == 2
     simulation = sub_sample_3D(simulation, subsample_factor * [1,1,1]);
 end
@@ -215,7 +214,7 @@ grid on
 % for different sections together 
 figure;
 subplot(1, 3, 1);
-plot(linspace(-dim_without_buffer(2)/2 * res_analytical(2)+ res_analytical(3)/2, dim_without_buffer(2)/2 * res_analytical(2)- res_analytical(3)/2,dim_without_buffer(2)), ...
+plot(linspace(-dim_without_buffer(2)/2 * res_analytical(2)+ res_analytical(2)/2, dim_without_buffer(2)/2 * res_analytical(2)- res_analytical(2)/2,dim_without_buffer(2)), ...
     squeeze(analytical_x(sectiony, :, sectionz)), ...
     'LineWidth',3,'Color',[0.55 0.55 0.55],'LineStyle',':');
 hold on
@@ -232,7 +231,7 @@ title('Field along x-axis')
 grid on
 
 subplot(1, 3, 2);
-plot(linspace(-dim_without_buffer(1)/2 * res_analytical(1)+ res_analytical(3)/2,dim_without_buffer(1)/2 * res_analytical(1)- res_analytical(3)/2,dim_without_buffer(1)), ...
+plot(linspace(-dim_without_buffer(1)/2 * res_analytical(1)+ res_analytical(1)/2,dim_without_buffer(1)/2 * res_analytical(1)- res_analytical(1)/2,dim_without_buffer(1)), ...
     squeeze(analytical_y(:, sectionx, sectionz)), ...
     'LineWidth',3,'Color',[0.55 0.55 0.55],'LineStyle',':');
 hold on
