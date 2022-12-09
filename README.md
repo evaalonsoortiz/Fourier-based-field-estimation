@@ -22,16 +22,14 @@ $$ \tilde B_{dz} (\mathbf{k}) = \tilde \chi (\mathbf{k}) \cdot B_0 \bigg (\frac{
 
 For the zero frequency, $k=0$, this equation is undefined. The value for the zero frequency should be equal to the average field, for which some assumptions have to be made. In this toolbox the assumption is made that we are dealing with one of the following situations:
 - a sphere with radius $a$ and susceptibility $\chi_i$ in an infinite medium of susceptibility $\chi_e$
-- an infinitely long cylinder with radius $a$ and susceptibility $\chi_i$ in an infinite medium of susceptibility $\chi_e$
+- an infinitely long cylinder with the main axis parallel to $B_0$, radius $a$ and susceptibility $\chi_i$ in an infinite medium of susceptibility $\chi_e$
 
 ### Sphere in an infinite medium:
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/112189990/194596500-c4b6450d-8d6e-41f8-a768-fbed345f261e.png" width="200" height="230">
 </p>
-
-The derivations for the internal and external field of a sphere in an infinite medium are explained in (Brown et al.). This takes into account the Lorentz sphere correction, which accounts for the shift in the Larmor spin frequency inside the spherical body, when the local magnetic field is imaged. If the background material has a susceptibility of $\chi_e$, so not in vacuum, the BMS (background medium susceptibility) also has to be taken into account. This adds the term $\frac{1}{3}\chi_e B_0$, which also includes a Lorentz effect. 
-
+The derivations for the internal and external field of a sphere in an infinite medium are explained in (Brown et al.). This takes into account the Lorentz sphere correction, which accounts for the shift in the Larmor spin frequency inside the spherical body, when the local magnetic field is imaged. If the background material has a susceptibility of $\chi_e$, so not in vacuum, the BMS (background medium susceptibility) also has to be taken into account. This adds the term $\frac{1}{3} \chi_e B_0$, which also includes a Lorentz effect. 
 <br/>
 <br/>
 
@@ -43,7 +41,7 @@ From this the average field value can be derived. For $r >> a$ , we can see that
 $$\tilde B_{dz} (k=0) = \frac{1}{3} \chi_e B_0$$
 
 
-### Infinitely long cylinder in an infinite medium
+### Infinitely long cylinder (|| $B_0$) in an infinite medium
 <p align="center">
 <img src="https://user-images.githubusercontent.com/112189990/194596320-76b668d3-5dbd-42f7-881e-e43b82f3653c.png" width="200" height="230">
 </p>
@@ -55,14 +53,7 @@ The same Lorentz corrections and BMS shift apply in case of a cylinder, the deri
 - Internal field: $\frac{1}{6} (\chi_i - \chi_e) \cdot (3\cos^2(\theta) - 1) B_0 + \frac{1}{3} \chi_e B_0$
 - External field: $\frac{1}{2} (\chi_i - \chi_e) \cdot \frac{a^3}{r^3} \sin^2(\theta) \cos(2\phi) B_0 + \frac{1}{3} \chi_e B_0$
 
-If $r>>a$ and $\theta = 0$ (parallel to $B_0$), then the internal and external field again go to a value of $\frac{1}{3} \chi_e B_0$. 
-
-
-### Calculations in FBFest
-This phantom now has to be created, which is essentialy a matrix containing the susceptibility distribution. The **ChiDist** class has 4 subclasses (**SheppLogan**, **Spherical**, **Cylindrical** and **Zubal**), which can be used to simulate the susceptibility distribution arising from a sphere, cylinder, Shepp-Logan or [Zubal phantom](http://noodle.med.yale.edu/zubal/data.htm). 
-
-Usually, only the susceptibility difference is known. This forms no issue because the end results of the demodulated field only depend on the susceptibility difference.
-
+If $r>>a$ and $\theta = \frac{\pi}{2}$ (parallel to $B_0$), then the internal and external field again go to a value of $\frac{1}{3} \chi_e B_0$. 
 
 ## Overview :
 

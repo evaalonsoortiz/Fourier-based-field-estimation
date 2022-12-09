@@ -30,9 +30,9 @@ classdef FBFest < handle
             obj.sus_ext = sus_ext;            
             
             if nargin > 5
-                obj.dim_with_buffer = varargin{1};
+                obj.dim_with_buffer = varargin{1}; % if you specify buffer dimensions as last argument
             else
-                obj.dim_with_buffer = obj.matrix;
+                obj.dim_with_buffer = obj.matrix; % no buffer if there is no extra argument with dimensions
             end
             
             obj.volume = zeros(obj.matrix(1), obj.matrix(2), obj.matrix(3));
@@ -59,8 +59,8 @@ classdef FBFest < handle
             % make sure that the k-space window is the same that the
             % one of the fft of susceptibility
             k2 = kx.^2 + ky.^2 + kz.^2;
-            kernel = fftshift(1/3 - kz.^2./k2); % For B0 = 1T
-            kernel(1, 1, 1) = 1/3; % for B0 = 1T
+            kernel = fftshift(1/3 - kz.^2./k2); % multiplication with b0 only in test script for field in Hz
+            kernel(1, 1, 1) = 1/3; % multiplication with b0 only in test script for field in Hz
 
             % compute the fourier transform of the susceptibility
             % distribution using the linearity of the FT
