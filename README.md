@@ -59,10 +59,10 @@ If $r>>a$ and $\theta = 0$ (cylinder axis perpendicular to $B_0$), then the inte
 ### Assumptions :
 
 $$ \tilde B_{dz} (\mathbf{k}) = \tilde M_{z} (\mathbf{k}) \cdot \mu_0 \bigg (\frac{1}{3} - \frac{k_z^2}{|\mathbf{k}|^2} \bigg) $$
-<br/>
+
 with 
-<br/>
-$$ \tilde B_{dz} (\mathbf{k = 0}) = \frac{1}{3} \chi_e B_0$$
+
+$$ \tilde B_{dz} (\mathbf{k = 0}) = \frac{1}{3} \chi_e B_0 $$
 
 
 ## Overview :
