@@ -100,7 +100,7 @@ To create the susceptibility distributions, some parameters have to be set:
     - phi_y = $\pi/2$ (measurement along y-axis)
 - **susin**: value of $\chi_i$ [ppm], only use this when you want to calculate the field offset
 - **susout**: value of $\chi_e$ [ppm], only use this when you want to calculate the field offset
-- **sus_diff**: value of $\chi_i - \chi_e$ [ppm], this value is used by default for the simulation of the demodulated and field offset. NB: if you have the specific values of $chi_i$ and $chi_e$ then you can change this parameter to susin - susout
+- **sus_diff**: value of $\chi_i - \chi_e$ [ppm], this value is used by default for the simulation of the demodulated and field offset. NB: if you have the specific values of $\chi_i$ and $\chi_e$ then you can change this parameter to susin - susout
 - **dim_without_buffer**: field of view (FOV) in 3 dimensions (y, x, z)
 - **dim**: FOV with buffer in 3 dimensions (y, x, z). The phantom is padded with zeros to the dimensions of dim, this improves the result from the Fourier Transform in FBFest, and will give a more accurate result of the simulated field. 
 - **res**: resolution of the phantom [mm] in 3 dimensions, this refers to the physical size of a voxel in the FOV. Default is 1mm.
