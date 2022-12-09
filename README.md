@@ -64,6 +64,12 @@ with
 
 $$ \tilde B_{dz} (\mathbf{k = 0}) = \frac{1}{3} \chi_e B_0 $$
 
+However, we often only know the susceptibility difference and not the individual $\chi_i$ and $\chi_e$ values. The calculations of the field can then still be done, assuming that we only want to know the frequency demodulated field in ppm. This is the same as what we measure in an MRI scan, and can be recognized by the field going to 0 ppm far away from the object. With this assumption, the resulting field only depends on the susceptibility difference $\chi_i - \chi_e$. We then use the susceptibility difference map (right) instead of the susceptibility distribution map. 
+
+<p align="center">
+<img src=![image](https://user-images.githubusercontent.com/112189990/206757819-9e1efe54-a182-47bb-b660-9e11ab772dce.png)>
+</p>
+
 
 ## Overview :
 
