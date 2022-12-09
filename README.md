@@ -64,12 +64,19 @@ with
 
 $$ \tilde B_{dz} (\mathbf{k = 0}) = \frac{1}{3} \chi_e B_0 $$
 
-However, we often only know the susceptibility difference and not the individual $\chi_i$ and $\chi_e$ values. The calculations of the field can then still be done, assuming that we only want to know the frequency demodulated field in ppm. This is the same as what we measure in an MRI scan, and can be recognized by the field going to 0 ppm far away from the object. With this assumption, the resulting field only depends on the susceptibility difference $\chi_i - \chi_e$. We then use the susceptibility difference map (right) instead of the susceptibility distribution map. 
+However, we often only know the susceptibility difference and not the individual $\chi_i$ and $\chi_e$ values. The calculations of the field can then still be done, assuming that we only want to know the frequency demodulated field in ppm. This is the same as what we measure in an MRI scan, and can be recognized by the field going to 0 ppm far away from the object. With this assumption, the resulting field only depends on the susceptibility difference $\chi_i - \chi_e$. We then use the susceptibility difference map (right) instead of the susceptibility distribution map (left).
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/112189990/206759060-6093c10d-b072-41ee-beb1-2eae9d184932.png" width="400" height="230">
+<img src="https://user-images.githubusercontent.com/112189990/206759060-6093c10d-b072-41ee-beb1-2eae9d184932.png" width="400" height="200">
 </p>
 
+Because the calculations are done in ppm (parts per million), the field also doesn't depend on the strength of the $B_0$ field. The equations for the frequency demodulated field ($\tilde B_{dz-demod} (\mathbf{k})) in ppm then reduce to the following: 
+
+$$ \tilde B_{dz-demod}[ppm] (\mathbf{k}) = \tilde \Delta\chi (\mathbf{k}) \bigg (\frac{1}{3} - \frac{k_z^2}{|\mathbf{k}|^2} \bigg) $$
+
+with 
+
+$$ \tilde B_{dz-demod}[ppm] (\mathbf{k = 0}) = 0 $$
 
 ## Overview :
 
