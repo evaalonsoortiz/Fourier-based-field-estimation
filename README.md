@@ -31,9 +31,6 @@ For the zero frequency, $k=0$, this equation is undefined. The value for the zer
 </p>
 The derivations for the internal and external field of a sphere in an infinite medium are explained in (Brown et al.). This takes into account the Lorentz sphere correction, which accounts for the shift in the Larmor spin frequency inside the spherical body, when the local magnetic field is imaged. If the background material has a susceptibility of $\chi_e$, so not in vacuum, the BMS (background medium susceptibility) also has to be taken into account. This adds the term $\frac{1}{3} \chi_e B_0$, which also includes a Lorentz effect. 
 
-<br/>
-<br/>
-
 
 - Internal field: $\frac{1}{3} \chi_e B_0$
 - External field: $\frac{1}{3} (\chi_i - \chi_e) \cdot \frac{a^3}{r^3} (3 \cos^2(\theta) - 1) \cdot B_0 + \frac{1}{3} \chi_e B_0$
