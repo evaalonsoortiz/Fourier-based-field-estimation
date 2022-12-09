@@ -14,24 +14,21 @@ switch(phantom)
 
 %% A sphere
     case "sphere"
-        subsample_factor = 2; % if = 2: downsampling of the simulation result to achieve the same resolution as from the scanner
-        res_factor = 1; % resolution of the phantom [mm]
-        
-        dim_without_buffer = [128, 128, 128]; % y x z % dimensions of the simulation volume
-        dim = [256 256 256]; % buffered dimensions of the volume, used for the fourier transformation
-        
-        res = res_factor*[1, 1, 1];
+        radius = 15; % [mm]
 
-        susin = 0; % susceptibility of the material
-        susout = 1e-6; % susceptibility of the medium
+        % define value of susceptibility difference as specific value or calculate susin (chi_i) - susout (chi_e)
+        % if you have separate values then you can also calculate the field offset, otherwise only the demodulated field is possible
 
-        % if you only have the susceptibility difference then define value here
-        % in this case you can only calculate the demodulated field, if you
-        % have the separate values for susin and susout you can also calculate the field offset
-
+        %susin = 0; % susceptibility of the material
+        %susout = 1e-6; % susceptibility of the medium
         sus_diff = 9e-6; % OR susin - susout;
 
-        radius = 15; % [mm]
+        dim_without_buffer = [128, 128, 128]; % y x z % dimensions of the simulation volume
+        dim = 2 * dim_without_buffer; % buffered dimensions of the volume, used for the fourier transformation
+        
+        res = [1, 1, 1]; % resolution of the phantom [mm]
+
+        subsample_factor = 1; % if = 2: downsampling of the simulation result to achieve the same resolution as from the scanner
 
         sus_dist = Spherical(dim_without_buffer, res, radius, [sus_diff 0]); % phantom is created
         sus = sus_dist.volume; % extract volume matrix from phantom
@@ -39,25 +36,24 @@ switch(phantom)
         
 %% A cylinder
     case "cylinder"
-        subsample_factor = 2; % if = 2: downsampling of the simulation result to achieve the same resolution as from the scanner
-        res_factor = 1; % resolution of the phantom [mm]
+        radius = 15; % [mm]
+        theta =  pi/2; % angle [rad] of rotation of the cylinder axis (starts parallel to z-axis and $B_0$) around y-axis
+        phi_x = 0; % angle [rad] between x and measure axis in the xy plane
+        phi_y = pi/2; % angle [rad] between y and measure axis in the xy plane
+
+        % define value of susceptibility difference as specific value or calculate susin (chi_i) - susout (chi_e)
+        % if you have separate values then you can also calculate the field offset, otherwise only the demodulated field is possible
+
+        %susin = 0; % susceptibility of the material
+        %susout = 1e-6; % susceptibility of the medium
+        sus_diff = 9e-6; % OR susin - susout;
 
         dim_without_buffer = [128, 128, 128]; % y x z % dimensions of the simulation volume
-        dim = 2*[129, 129, 129]; % buffered dimensions of the volume, used for the fourier transformation
-        res = res_factor * [1, 1, 1]; 
+        dim = 2 * dim_without_buffer; % buffered dimensions of the volume, used for the fourier transformation
 
-        susin = 3e-6; % susceptibility of the material
-        susout = -3e-6; % susceptibility of the medium
+        res = [1, 1, 1]; % resolution of the phantom [mm]
 
-        % if you only have the susceptibility difference then define value here
-        % in this case you can only calculate the demodulated field, if you
-        % have the values for susin and susout you can also calculate the field offset
-        sus_diff =  6e-6; % OR susin - susout; 
-    
-        radius = 15; % [mm]
-        theta =  pi/2; % rad, tilt of the cylinder between B0 and z, rotation around y-axis
-        phi_x = 0; % angle between x and measure axis in the xy plane
-        phi_y = pi/2; % angle between y and measure axis in the xy plane
+        subsample_factor = 1; % if = 2: downsampling of the simulation result to achieve the same resolution as from the scanner
 
         sus_dist = Cylindrical(dim_without_buffer, res, radius, theta, [sus_diff 0]); % phantom is created
         sus = sus_dist.volume; % extract volume matrix from phantom
@@ -96,7 +92,6 @@ if (strcmp(phantom, 'sphere'))
     dBz_out = (sus_diff) / 3 .* (radius ./ r).^3 .* (3 .* z.^2 ./ r.^2 - 1);
     dBz_out(isnan(dBz_out)) = 0; % because demodulated field, for field offset we add susout/3
     dBz_in  = 0; 
-    %dbz_in  = zeros(dim_without_buffer) + (susout + susout*susin) * b0 / (3 + 2 * susout + susin); % Shift from article FBM
 
     % Create a mask to use the expressions of inside and outside
     % effectively in the sphere an outside
@@ -139,7 +134,7 @@ toc
         
 %% Variation calculation
 tic 
-dBz_obj = FBFest(type, sus, res, dim_without_buffer, sus(1, 1, 1), dim) ; % ( sus, image_res, matrix, sus_ext, b0, dim_with_buff, varargin )
+dBz_obj = FBFest(type, sus, res, dim_without_buffer, sus(1, 1, 1), dim) ;
 
 toc
 dBz_simulation = dBz_obj.volume; % this is the simulated field offset ratio
