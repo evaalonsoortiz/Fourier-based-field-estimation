@@ -58,7 +58,7 @@ If $r>>a$ and $\theta = 0$ (cylinder axis perpendicular to $B_0$), then the inte
 
 ### Assumptions :
 
-$$ \tilde B_{dz} (\mathbf{k}) = \tilde M_{z} (\mathbf{k}) \cdot \mu_0 \bigg (\frac{1}{3} - \frac{k_z^2}{|\mathbf{k}|^2} \bigg) $$
+$$ \tilde B_{dz} (\mathbf{k}) = \tilde \chi (\mathbf{k}) \cdot B_0 \bigg (\frac{1}{3} - \frac{k_z^2}{|\mathbf{k}|^2} \bigg) $$
 
 with 
 
