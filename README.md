@@ -88,6 +88,22 @@ Three flags in the beginning of the test script give the user some choices for t
 - **field**: the choice between "demodulated" or "offset". The default is demodulated when only the susceptibility difference is known, however when $\chi_i$ and $\chi_e$ are known separately the simulation of the field offset (not frequency demodulated) can be done. 
 - **unit**: the choice between "ppm" or "Hz". If ppm is chosen, then the simulation does not depend on the strength of $B_0$, if Hz is chosen then it does. 
 
+The susceptibility distribution is created using the **ChiDist** class, which has 4 subclasses (**SheppLogan**, **Spherical**, **Cylindrical** and **Zubal**). In the test script, the Spherical and Cylindrical subclasses are used to simulate the field offset from a spherical or cylindrical phantom. The subclasses SheppLogan and Zubal can be used to simulate the field offset from the Shepp-Logan phantom or the [Zubal phantom](http://noodle.med.yale.edu/zubal/data.htm). For these phantoms there is no analytical solution. 
+
+To create the susceptibility distributions, some parameters have to be set:
+- **radius**: radius of the sphere or cylinder [mm]
+- **theta** (only for cylinder): angle of rotation of the cylinder axis (starts parallel to z-axis and $B_0$) around y-axis [rad]
+- **phi** (only for cylinder): angle between x-axis and measurement axis in the xy plane [rad], default values for phi are set and should not be changed
+    - phi_x = 0 (measurement along x-axis)
+    - phi_y = $\pi/2$ (measurement along y-axis)
+- **susin**: value of $\chi_i$ [ppm], only use this when you want to calculate the field offset
+- **susout**: value of $\chi_e$ [ppm], only use this when you want to calculate the field offset
+- **sus_diff**: value of $\chi_i - \chi_e$ [ppm], this value is used by default for the simulation of the demodulated and field offset. NB: if you have the specific values of $chi_i$ and $chi_e$ then you can change this parameter to susin - susout
+- **dim_without_buffer**: field of view (FOV) in 3 dimensions (y, x, z)
+- **dim**: FOV with buffer in 3 dimensions (y, x, z). The phantom is padded with zeros to the dimensions of dim, this improves the result from the Fourier Transform in FBFest, and will give a more accurate result of the simulated field. 
+- **res**: resolution of the phantom [mm] in 3 dimensions, this refers to the physical size of a voxel in the FOV. Default is 1mm.
+- **subsample_factor**: factor with which the simulated field is subsampled to match the resolution of the scanner. Default is 1 (no subsampling), a factor of 2 will give a resolution of 2mm if res is set to 1mm. The subsampling is done using the function **subsample_3D** in the utils folder.
+
 
 ## Overview :
 
