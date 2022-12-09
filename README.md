@@ -92,9 +92,10 @@ The susceptibility distribution is created using the **ChiDist** class, which ha
 
 To create the susceptibility distributions, some parameters have to be set:
 - **radius**: radius of the sphere or cylinder [mm]
-- **theta** (only for cylinder): angle of rotation of the cylinder axis (starts parallel to z-axis and $B_0$) around y-axis [rad]
-- **phi** (only for cylinder): angle between x-axis and measurement axis in the xy plane [rad], 
-  default values for phi are set and should not be changed
+- **theta** (only for cylinder): angle of rotation of the cylinder axis around y-axis [rad]
+-   - theta = 0: cylinder axis parallel to z-axis and $B_0$
+    - theta = $\pi/2$: cylinder axis perpendicular to z-axis and $B_0$
+- **phi** (only for cylinder): angle between x-axis and measurement axis in the xy plane [rad], default values for phi are set and should not be changed:
     - phi_x = 0 (measurement along x-axis)
     - phi_y = $\pi/2$ (measurement along y-axis)
 - **susin**: value of $\chi_i$ [ppm], only use this when you want to calculate the field offset
