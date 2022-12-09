@@ -72,16 +72,21 @@ However, we often only know the susceptibility difference and not the individual
 
 Because the calculations are done in ppm (parts per million), the field also doesn't depend on the strength of the $B_0$ field. The equations for the frequency demodulated field ($\tilde B_{dz-demod} (\mathbf{k})) in ppm then reduce to the following: 
 
-$$ \tilde B_{dz-demod}[ppm] (\mathbf{k}) = \tilde \Delta\chi (\mathbf{k}) \bigg (\frac{1}{3} - \frac{k_z^2}{|\mathbf{k}|^2} \bigg) $$
+$$ \tilde B_{dz-demod}[ppm] (\mathbf{k}) = \tilde \Delta\chi (\mathbf{k}) \bigg (\frac{1}{3} - \frac{k_z^2}{|\mathbf{k}|^2} \bigg) \cdot 1e6 $$
 
 with 
 
-$$ \tilde B_{dz-demod}[ppm] (\mathbf{k = 0}) = \frac{1}{3} \cdot 0 \cdot B_0 = 0 $$
+$$ \tilde B_{dz-demod}[ppm] (\mathbf{k = 0}) = \frac{1}{3} \cdot 0 \cdot B_0 \cdot 1e6 = 0 $$
 
 These final equations are the ones used in **FBFest**, which calculates the magnetic field offset produced by a susceptibility distribution subject to a uniform external magnetic field $B_0$ (oriented along the z-axis).
 
 ## Usage :
+A test script **test_calc_bdz** was developed for easy use of the FBFest function when testing with a spherical or cylindrical phantom. This test script allows a comparison to the analytical solutions for the sphere and cylinder, for which the equations are given in the theory. These equations are also adapted to give the solution for the frequency demodulated field in ppm, so they only depend on the susceptibility difference and don't depend on the field strength of $B_0$. 
 
+Three flags in the beginning of the test script give the user some choices for the simulation. 
+- **phantom**: the choice between "sphere" or "cylinder"
+- **field**: the choice between "demodulated" or "offset". The default is demodulated when only the susceptibility difference is known, however when $\chi_i$ and $\chi_e$ are known separately the simulation of the field offset (not frequency demodulated) can be done. 
+- **unit**: the choice between "ppm" or "Hz". If ppm is chosen, then the simulation does not depend on the strength of $B_0$, if Hz is chosen then it does. 
 
 
 ## Overview :
