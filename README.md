@@ -56,6 +56,15 @@ The same Lorentz corrections and BMS shift apply in case of a cylinder, the deri
 
 If $r>>a$ and $\theta = 0$ (cylinder axis perpendicular to $B_0$), then the internal and external field again go to a value of $\frac{1}{3} \chi_e B_0$. 
 
+### Assumptions :
+
+$$ \tilde B_{dz} (\mathbf{k}) = \tilde M_{z} (\mathbf{k}) \cdot \mu_0 \bigg (\frac{1}{3} - \frac{k_z^2}{|\mathbf{k}|^2} \bigg) $$
+<br/>
+with 
+<br/>
+$$ \tilde B_{dz} (\mathbf{k = 0}) = \frac{1}{3} \chi_e B_0$$
+
+
 ## Overview :
 
 The **ChiDist** class has 4 subclasses (**SheppLogan**, **Spherical**, **Cylindrical** and **Zubal**) and can be used to simulate the susceptibility distribution arising from a sphere, cylinder, Shepp-Logan or [Zubal phantom](http://noodle.med.yale.edu/zubal/data.htm). 
