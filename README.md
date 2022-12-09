@@ -76,7 +76,7 @@ $$ \tilde B_{dz-demod}[ppm] (\mathbf{k}) = \tilde \Delta\chi (\mathbf{k}) \bigg 
 
 with 
 
-$$ \tilde B_{dz-demod}[ppm] (\mathbf{k = 0}) = frac{1}{3} \cdot 0 \cdot B_0 = 0 $$
+$$ \tilde B_{dz-demod}[ppm] (\mathbf{k = 0}) = \frac{1}{3} \cdot 0 \cdot B_0 = 0 $$
 
 ## Overview :
 
