@@ -107,6 +107,11 @@ To create the susceptibility distributions, some parameters have to be set:
 - **subsample_factor**: factor with which the simulated field is subsampled to match the resolution of the scanner. Default is 1 (no subsampling), a factor of 2 will give a resolution of 2mm if res is set to 1mm. The subsampling is done using the function **subsample_3D** in the utils folder.
 
 
+The susceptibility distribution is then made using the ChiDist subclasses:
+- **sphere**: sus_dist_volume = Spherical(dim_without_buffer, res, radius, [sus_diff 0]).volume;
+- **cylinder**: sus_dist_volume = Cylindrical(dim_without_buffer, res, radius, theta, [sus_diff 0]).volume;
+- **Zubal**: sus_dist_volume = Zubal('modified_zubal.nii').volume;
+
 ## Overview :
 
 The **ChiDist** class has 4 subclasses (**SheppLogan**, **Spherical**, **Cylindrical** and **Zubal**) and can be used to simulate the susceptibility distribution arising from a sphere, cylinder, Shepp-Logan or [Zubal phantom](http://noodle.med.yale.edu/zubal/data.htm). 
