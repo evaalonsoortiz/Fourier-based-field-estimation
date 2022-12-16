@@ -83,7 +83,7 @@ These final equations are the ones used in **FBFest**, which calculates the magn
 ## Usage :
 
 ### Test script
-Run the test script from the main folder (the folder containing FBFest), after adding the folder utils and the folder test_scripts to the path.
+Run the test script from the main folder (the folder containing FBFest), after adding the folder utils, test_scripts and external to the path.
 
 A test script **test_calc_bdz** was developed for easy use of the FBFest function when testing with a spherical or cylindrical phantom. This test script allows a comparison to the analytical solutions for the sphere and cylinder, for which the equations are given in the theory. These equations are also adapted to give the solution for the frequency demodulated field in ppm, so they only depend on the susceptibility difference and don't depend on the field strength of $B_0$. 
 
