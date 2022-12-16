@@ -54,7 +54,7 @@ The same Lorentz corrections and BMS shift apply in case of a cylinder, the deri
 <br/>
 
 - Internal field: $\frac{1}{6} (\chi_i - \chi_e) \cdot (3\cos^2(\theta) - 1) B_0 + \frac{1}{3} \chi_e B_0$
-- External field: $\frac{1}{2} (\chi_i - \chi_e) \cdot \frac{a^3}{r^3} \sin^2(\theta) \cos(2\phi) B_0 + \frac{1}{3} \chi_e B_0$
+- External field: $\frac{1}{2} (\chi_i - \chi_e) \cdot \frac{a^2}{r^2} \sin^2(\theta) \cos(2\phi) B_0 + \frac{1}{3} \chi_e B_0$
 
 If $r>>a$ and $\theta = 0$ (cylinder axis perpendicular to $B_0$), then the internal and external field again go to a value of $\frac{1}{3} \chi_e B_0$. 
 
