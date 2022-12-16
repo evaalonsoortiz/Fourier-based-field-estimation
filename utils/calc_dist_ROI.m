@@ -1,4 +1,7 @@
 function [distROI, d8_matrix] = calc_dist_ROI(matrix)
+% Mathilde Dupouy made this script in 2022 for buffer dimension calculations. No further
+% support is offered on the content of this script.
+
 % This function calculates the minimum 8-distance between the region of
 % interest (ROI, defined as what is not the background) and the edge of the
 % 3D matrix. The method is based on two spanning of the matrixes and at
