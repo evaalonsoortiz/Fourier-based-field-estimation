@@ -1,3 +1,4 @@
+
 ## Theory :
 
 Fourier-based field estimation is a Matlab toolbox to estimate magnetic field inhomogeneity due to spatial variation of magnetic susceptibility. 
@@ -7,6 +8,7 @@ In MRI it is assumed that the $B_0$ field is uniform, but due to differences in 
 The derivation of the magnetic field equation is based on a Fourier transform of the susceptibility distribution and a Fourier transform of the point-dipole field. Only the z-component of the magnetic field $B_{dz}$ is important in the case of an external field $B_0$ in the z-direction. The derivation of the following equation for the FT of the magnetic field $\tilde B_{dz}$ is explained in ([Marques et al.](https://onlinelibrary.wiley.com/doi/10.1002/cmr.b.20034)).
 
 $$ \tilde B_{dz} (\mathbf{k}) = \tilde M_{z} (\mathbf{k}) \cdot \mu_0 \bigg (\frac{1}{3} - \frac{k_z^2}{|\mathbf{k}|^2} \bigg) $$
+
 
 With:
 
