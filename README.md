@@ -219,7 +219,7 @@ spherical_dBz_subsampled = sub_sample_3D(spherical_dBz.volume, [2 2 2]);
 Visualization:
 
 ```
-plot_along_axes(spherical_dBz_subsampled.volume, 'ppm')
+plot_along_axes(spherical_dBz_subsampled, 'ppm')
 ```
 
 #### 6. Get results in Hz instead of ppm
