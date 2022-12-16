@@ -39,7 +39,7 @@ zubal_sus_dist.volume = sus;
 % % tic
 % disp(size(sus))
 % t0 = cputime;
-% dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim, b0);
+% dBz_obj = FBFest(sus, zubal_sus_dist.image_res, dim);
 % t1 = cputime;
 % 
 % %Truncate :
@@ -88,7 +88,7 @@ for zi = 1:n
     % tic
 
     t0 = cputime;
-    dBz_obj = FBFest('Zubal', sus, res, dim_without_buffer, sus_ext);%, [256, 256, 128]);
+    dBz_obj = FBFest('Zubal', sus, res, dim_without_buffer);%, [256, 256, 128]);
     t1 = cputime;
 
 %     FT_chi = fftshift(fftn(fftshift(sus + sus_ext)));
@@ -137,14 +137,6 @@ end
 
 %% Plots: 
 close all
-% plot along z-axis
-figure;
-
-plot(squeeze(dBz_map_ppm(sectionx, sectiony, :)), ...
-    'LineWidth',1.5,'Color','r');
-hold off
-grid on
-
 
 %%
 yyaxis left
@@ -157,7 +149,7 @@ ylabel('Quadratic error (ppm^2)')
 % plot(z_dims, time);
 % ylabel('time (s)')
 hold off
-legend('Between successive iterations', 'Between the current calculation and the last (z512))') %, 'execution time (s)') %HERE
+%legend('Between successive iterations', 'Between the current calculation and the last (z512))') %, 'execution time (s)') %HERE
 xlabel('Pixels added in the z direction') %HERE
 grid on
 grid minor

@@ -20,9 +20,9 @@
     % Properties of the phantom : 
     % dimensions 256x256x128
     % Resolution 1.1x1.1x1.4
-zubal_sus_dist = Zubal('zubal_EAO.nii');
+zubal_sus_dist = Zubal('zubal_modified.nii');
 sus_nii = make_nii(zubal_sus_dist.volume);
-save_nii(sus_nii, 'sus_zubal_EAO.nii')
+save_nii(sus_nii, 'sus_zubal_modified.nii')
 
 dim_without_buffer = zubal_sus_dist.matrix;
 
@@ -74,8 +74,8 @@ title('Difference between initial and filtered susceptibility')
 
 %% Experiment 2 : Comparing calculation between the initial susceptibility and the filtered one
 
-dBz_obj_filt = FBFest('Zubal', zubal_filt, zubal_sus_dist.image_res, dim_without_buffer, sus(1, 1, 1), dim);
-dBz_obj = FBFest('Zubal', sus, zubal_sus_dist.image_res, dim_without_buffer, sus(1, 1, 1), dim);
+dBz_obj_filt = FBFest('Zubal', zubal_filt, zubal_sus_dist.image_res, dim_without_buffer, dim);
+dBz_obj = FBFest('Zubal', sus, zubal_sus_dist.image_res, dim_without_buffer, dim);
 dBz_map_ppm_filt = real(dBz_obj_filt.volume * 1e6);
 dBz_map_ppm = real(dBz_obj.volume * 1e6);
 
