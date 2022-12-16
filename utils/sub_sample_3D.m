@@ -34,7 +34,7 @@ if (nargin < 3)
     sigmaFilter = dim ./ factor;  
 end
 
-dim_pad = dim(1)/2;  % dim_pad pixels will be added in each direction TODO adapted to sigma ?
+dim_pad = 0; %dim(1)/2;  % dim_pad pixels will be added in each direction TODO adapted to sigma ?
 
 % Gaussian filter
 %-dim(1)/2 - dim_pad  + 1:dim(1)/2 + dim_pad
@@ -56,11 +56,22 @@ vol_filt = vol_filt(dim_pad + 1: end - dim_pad, dim_pad + 1: end - dim_pad, dim_
 phase = rem(floor(dim / 2)+1, factor); % phase is chosen to be sure to keep the center at the center
 phase(phase == 0) = factor(phase == 0);
 
-% to remain symmetrical: we don't use the first and last sample and we use the two centers
-vol_lowRes = vol_filt(...
-    [phase(1)+1:factor(1):end/2, end/2+1:factor(1):end], ...
-    [phase(2)+1:factor(2):end/2, end/2+1:factor(2):end], ...
-    [phase(3)+1:factor(3):end/2, end/2+1:factor(3):end]); 
+% note: this subsampling is only symmetrical for factor 2, the interpolation scheme becomes a lot more difficult for larger factors
+% because to stay symmetrical we need an array with dimension that follows mod(dimension, factor) = 1 
+% (examples: for 2 this can be 3, 5, 7, ..., for 3 this can be 4, 7, 10, ..., for 4 this can be 5, 9, 13, ...)
+
+if mod(factor(1),2) == 0
+    % first interpolate in 3 dimensions if the factor is even
+    vol_interp = interp3(vol_filt);
+
+    % then take the interpolated values to create a matrix with odd dimensions
+    vol_odd = vol_interp(2:2:end-1, 2:2:end-1, 2:2:end-1);
+
+    % subsample
+    vol_lowRes = vol_odd(1:factor(1):end, 1:factor(1):end, 1:factor(1):end);
 
 
+else
+    vol_lowRes = vol_filt(1:factor(1):end, 1:factor(1):end, 1:factor(1):end);
+end
 end
