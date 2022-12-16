@@ -50,7 +50,7 @@ From this the average field value can be derived. For $r >> a$ , we can see that
 The derivation for the analytical solution of the magnetic field arising from an infinite cylinder placed within an infinite medium is given in Brown et al. This solution includes the Lorentz sphere correction. If the background material has a susceptibility of $\chi_e$ and cylinder has a susceptibility of $\chi_i$, the magnetic field inside and outside of the cylinder is expressed as:
 
 - Internal field: $\frac{1}{6} (\chi_i - \chi_e) \cdot (3\cos^2(\theta) - 1) B_0 + \frac{1}{3} \chi_e B_0$
-- External field: $\frac{1}{2} (\chi_i - \chi_e) \cdot \frac{a^3}{r^3} \sin^2(\theta) \cos(2\phi) B_0 + \frac{1}{3} \chi_e B_0$
+- External field: $\frac{1}{2} (\chi_i - \chi_e) \cdot \frac{a^2}{r^2} \sin^2(\theta) \cos(2\phi) B_0 + \frac{1}{3} \chi_e B_0$
 
 where $\theta$ is the angle between the direction of the main magnetic field and the central axis of the cylinder.
 
@@ -109,6 +109,7 @@ The susceptibility distribution is then made using the ChiDist subclasses:
 <br/>
 
 ### From command line
+
 Run the following commands from the main folder (the folder containing FBFest), after adding it to your path.
 
 #### 1. Spherical phantom
@@ -208,7 +209,7 @@ spherical_dBz_subsampled = sub_sample_3D(spherical_dBz.volume, [2 2 2]);
 Visualization:
 
 ```
-plot_along_axes(spherical_dBz_subsampled.volume, 'ppm')
+plot_along_axes(spherical_dBz_subsampled, 'ppm')
 ```
 
 #### 6. Get results in Hz instead of ppm
