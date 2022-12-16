@@ -81,12 +81,16 @@ $$ \tilde B_{dz-demod}[ppm] (\mathbf{k = 0}) = \frac{1}{3} \cdot 0 \cdot B_0 \cd
 These final equations are the ones used in **FBFest**, which calculates the magnetic field offset produced by a susceptibility distribution subject to a uniform external magnetic field $B_0$ (oriented along the z-axis).
 
 ## Usage :
+
+### Test script
+Run the test script from the main folder (the folder containing FBFest), after adding the folder utils and the folder test_scripts to the path.
+
 A test script **test_calc_bdz** was developed for easy use of the FBFest function when testing with a spherical or cylindrical phantom. This test script allows a comparison to the analytical solutions for the sphere and cylinder, for which the equations are given in the theory. These equations are also adapted to give the solution for the frequency demodulated field in ppm, so they only depend on the susceptibility difference and don't depend on the field strength of $B_0$. 
 
 Three flags in the beginning of the test script give the user some choices for the simulation. 
 - **phantom**: the choice between "sphere" or "cylinder"
-- **field**: the choice between "demodulated" or "offset". The default is demodulated when only the susceptibility difference is known, however when $\chi_i$ and $\chi_e$ are known separately the simulation of the field offset (not frequency demodulated) can be done. 
-- **unit**: the choice between "ppm" or "Hz". If ppm is chosen, then the simulation does not depend on the strength of $B_0$, if Hz is chosen then it does. 
+- **field**: the choice between "demodulated" or "offset". The default is demodulated. When only the susceptibility difference is known we are restricted to the default, however when $\chi_i$ and $\chi_e$ are known separately, the simulation of the field offset (not frequency demodulated) can be done. 
+- **unit**: the choice between "ppm" or "Hz". Default is ppm. If ppm is chosen, then the simulation does not depend on the strength of $B_0$, if Hz is chosen then it does. 
 
 The susceptibility distribution is created using the **ChiDist** class, which has 4 subclasses (**SheppLogan**, **Spherical**, **Cylindrical** and **Zubal**). In the test script, the Spherical and Cylindrical subclasses are used to simulate the field offset from a spherical or cylindrical phantom. The subclasses SheppLogan and Zubal can be used to simulate the field offset from the Shepp-Logan phantom or the [Zubal phantom](http://noodle.med.yale.edu/zubal/data.htm). For these phantoms there is no analytical solution. 
 
@@ -111,15 +115,162 @@ The susceptibility distribution is then made using the ChiDist subclasses:
 - **sphere**: sus_dist_volume = Spherical(dim_without_buffer, res, radius, [sus_diff 0]).volume;
 - **cylinder**: sus_dist_volume = Cylindrical(dim_without_buffer, res, radius, theta, [sus_diff 0]).volume;
 - **Zubal**: sus_dist_volume = Zubal('modified_zubal.nii').volume;
+<br/>
 
-## Overview :
+### From command line
+Run the following commands from the main folder (the folder containing FBFest), after adding the folder utils to the path.
 
-The **ChiDist** class has 4 subclasses (**SheppLogan**, **Spherical**, **Cylindrical** and **Zubal**) and can be used to simulate the susceptibility distribution arising from a sphere, cylinder, Shepp-Logan or [Zubal phantom](http://noodle.med.yale.edu/zubal/data.htm). 
+#### 1. Spherical phantom
+```
+spherical_sus_dist = Spherical(matrix, image_res, radius, [sus_diff 0]);
+spherical_dBz = FBFest('spherical', spherical_sus_dist.volume, image_res, matrix);
+```
+
+Example:
+
+```
+spherical_sus_dist = Spherical([128 128 128], [1 1 1], 10, [9 0]);
+spherical_dBz = FBFest('spherical', spherical_sus_dist.volume, spherical_sus_dist.image_res, spherical_sus_dist.matrix);
+```
+
+Visualization:
+
+```
+plot_along_axes(spherical_dBz.volume, 'ppm')
+sliceViewer(spherical_dBz.volume,'Colormap',colormap(parula),'SliceDirection',[1 0 0]); % or direction [0 1 0] or [0 0 1]
+slice(spherical_dBz.volume, 64, 64, 64)
+```
+
+#### 2. Cylindrical phantom
+
+```
+cylindrical_sus_dist = Cylindrical(matrix, image_res, radius, theta, [sus_diff 0]);
+cylindrical_dBz = FBFest('cylindrical', cylindrical_sus_dist.volume, image_res, matrix);
+```
+
+Example:
+
+```
+cylindrical_sus_dist = Cylindrical([128 128 128], [1 1 1], 10, pi/2, [9 0]);
+cylindrical_dBz = FBFest('cylindrical', cylindrical_sus_dist.volume, cylindrical_sus_dist.image_res, cylindrical_sus_dist.matrix);
+```
+
+Visualization:
+
+```
+plot_along_axes(cylindrical_dBz.volume, 'ppm')
+sliceViewer(cylindrical_dBz.volume,'Colormap',colormap(parula),'SliceDirection',[1 0 0]); % or direction [0 1 0] or [0 0 1]
+slice(cylindrical_dBz.volume, 64, 64, 64)
+```
+
+#### 3. Zubal phantom
+
+```
+zubal_sus_dist = Zubal('zubal_modified.nii');
+zubal_dBz = FBFest('Zubal', zubal_sus_dist.volume, zubal_sus_dist.image_res, zubal_sus_dist.matrix);
+```
+
+Visualization:
+
+```
+plot_along_axes(zubal_dBz.volume, 'ppm')
+sliceViewer(zubal_dBz.volume,'Colormap',colormap(parula),'SliceDirection',[1 0 0]); % or direction [0 1 0] or [0 0 1]
+slice(zubal_dBz.volume, 64, 64, 64)
+```
+
+#### 4. Buffer
+
+```
+spherical_sus_dist = Spherical(matrix, image_res, radius, [sus_diff 0]);
+spherical_buffer_dBz = FBFest('spherical', spherical_sus_dist.volume, image_res, matrix, **buffer_dim**);
+```
+
+Example:
+
+```
+spherical_sus_dist = Spherical([128 128 128], [1 1 1], 10, [9 0]);
+spherical_buffer_dBz = FBFest('spherical', spherical_sus_dist.volume, spherical_sus_dist.image_res, spherical_sus_dist.matrix, [256 256 256]);
+```
+
+Visualization:
+
+```
+plot_along_axes(spherical_buffer_dBz.volume, 'ppm')
+```
+
+#### 5. Subsample
+
+```
+spherical_sus_dist = Spherical(matrix, image_res, radius, [sus_diff 0]);
+spherical_dBz = FBFest('spherical', spherical_sus_dist.volume, image_res, matrix);
+spherical_dBz_subsampled = sub_sample_3D(spherical_dBz.volume, factor);
+```
+
+Example:
+
+```
+spherical_sus_dist = Spherical([128 128 128], [1 1 1], 10, [9 0]);
+spherical_dBz = FBFest('spherical', spherical_sus_dist.volume, spherical_sus_dist.image_res, spherical_sus_dist.matrix);
+spherical_dBz_subsampled = sub_sample_3D(spherical_dBz.volume, [2 2 2]);
+```
+
+Visualization:
+
+```
+plot_along_axes(spherical_dBz_subsampled.volume, 'ppm')
+```
+
+#### 6. Get results in Hz instead of ppm
+
+```
+spherical_sus_dist = Spherical(matrix, image_res, radius, [sus_diff 0]);
+spherical_dBz_ppm = FBFest('spherical', spherical_sus_dist.volume, image_res, matrix);
+spherical_dBz_Hz = spherical_dBz_ppm.volume * B0[T] * Larmor_frequency[MHz/T];
+```
+
+Example:
+
+```
+spherical_sus_dist = Spherical([128 128 128], [1 1 1], 10, [9 0]);
+spherical_dBz_ppm = FBFest('spherical', spherical_sus_dist.volume, spherical_sus_dist.image_res, spherical_sus_dist.matrix);
+spherical_dBz_ppm_vol = spherical_dBz_ppm.volume;
+spherical_dBz_Hz_vol = spherical_dBz_ppm_vol* 3 * 42.5775;
+```
 
 
-**FBFest.m** can be used to calculate the magnetic field offset produced by susceptibility distribution subject to a uniform external magnetic field B0 that is orientated along the z-axis.
+Visualization:
 
-The folder **utils** includes a function to calculate the minimal distance between the region of interest and the edges of a matrix and a function that down-samples a 3D matrix by a chosen factor.
+```
+plot_along_axes(spherical_dBz_ppm_vol, 'ppm')
+plot_along_axes(spherical_dBz_Hz_vol, 'Hz')
+```
+
+
+#### 7. Get field offset instead of frequency demodulated field
+
+```
+spherical_sus_dist = Spherical(matrix, image_res, radius, [sus_diff 0]);
+spherical_dBz_demod = FBFest('spherical', spherical_sus_dist.volume, image_res, matrix);
+spherical_dBz_offset = spherical_dBz_demod.volume + susout / 3;
+```
+
+Example:
+
+```
+spherical_sus_dist = Spherical([128 128 128], [1 1 1], 10, [9 0]);
+spherical_dBz_demod = FBFest('spherical', spherical_sus_dist.volume, spherical_sus_dist.image_res, spherical_sus_dist.matrix);
+spherical_dBz_demod_vol = spherical_dBz_demod.volume;
+spherical_dBz_offset_vol = spherical_dBz_demod_vol + 1/3;
+```
+
+
+Visualization:
+
+```
+plot_along_axes(spherical_dBz_demod_vol, 'ppm')
+plot_along_axes(spherical_dBz_offset_vol, 'ppm')
+```
+
 
 ## References :
 
@@ -132,10 +283,3 @@ ZUBAL, I.G., HARRELL, C.R, SMITH, E.O, RATTNER, Z., GINDI, G. and HOFFER, P.B., 
 ## Dependencies :
 [phantom3d.m](https://www.mathworks.com/matlabcentral/fileexchange/9416-3d-shepp-logan-phantom)
 
-## Example usage :
-
-To generate a susceptibility distribution with the shape of cylinder:
-
-```
-cylindrical_sus_dist = Cylindrical( matrix, image_res, radius, theta, [sus_in sus_out]);
-cylindrical_dBz = FBFest( 'spherical', cylindrical_sus_dist.volume, image_res, matrix, sus_out);

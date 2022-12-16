@@ -5,31 +5,28 @@ classdef FBFest < handle
         matrix
         dim_with_buffer
         image_res
-        volume % [T] The field variation is in unit of B0, so needs to be multiplied by the strength field B0 if necessary
-        sus % SI unit (not ppm)
+        volume % [ppm] The field variation is ppm
+        % To go to Hz, the field needs to be multiplicated by B0[T] * Larmor_freq [MHz/T]
+        sus % [ppm]
         type
-        sus_ext % SI unit (not ppm)
     end
     
     methods
-        function obj = FBFest(type, sus, image_res, matrix, sus_ext, varargin )
+        function obj = FBFest(type, sus, image_res, matrix, varargin)
             % Method FBFest (constructor)
             % type      : the type of the phantom : 'spherical',
             % 'cylindrical', 'Zubal', 'Shepp-Logan' or '' for an other phantom
             % sus       : the 3D distribution of susceptibility
             % image_res : a vector of the resolution in the 3 directions
             % matrix    : a vector of the dimensions of the field_view (matching sus dimensions)
-            % sus_ext   : a scalar, the susceptibility of the external medium
-            %              (the region of interest is assumed to be surrounded
-            %              by a region of infinite extent whose susceptibility is sus_ext)
             % varargin  : a dimension with the buffer can be chosen
+
             obj.type = type;
             obj.matrix  = matrix ;
             obj.image_res  = image_res ;
-            obj.sus  = sus ;
-            obj.sus_ext = sus_ext;            
+            obj.sus  = sus ;         
             
-            if nargin > 5
+            if nargin > 4
                 obj.dim_with_buffer = varargin{1}; % if you specify buffer dimensions as last argument
             else
                 obj.dim_with_buffer = obj.matrix; % no buffer if there is no extra argument with dimensions
@@ -44,6 +41,11 @@ classdef FBFest < handle
             %%---------------------------------------------------------------------- %%
             %% Define constants
             %%---------------------------------------------------------------------- %%
+            % susceptibility of the external medium 
+            % (a scalar, the region of interest is assumed to be surrounded
+            % by a region of infinite extent whose susceptibility is sus_ext)
+            susout = obj.sus(1,1,1);
+
             % k-space window
             k_max = 1./(2.*obj.image_res);
             interval = 2 * k_max ./ obj.dim_with_buffer;
@@ -65,7 +67,7 @@ classdef FBFest < handle
             % compute the fourier transform of the susceptibility
             % distribution using the linearity of the FT
             FT_chi = fftn(obj.sus, obj.dim_with_buffer);
-            FT_chi(1, 1, 1) = FT_chi(1,1,1) + prod(obj.dim_with_buffer) * obj.sus_ext;
+            FT_chi(1, 1, 1) = FT_chi(1,1,1) + prod(obj.dim_with_buffer) * susout;
 
             % compute Bdz (the z-component of the magnetic field due to a
             % sphere, relative to B0) FFT. 
@@ -108,9 +110,9 @@ classdef FBFest < handle
             switch saveFormat
                 case 'nifti'
                     if strcmp(obj.type,'Zubal')
-                        nii_vol = make_nii(real(1e6*vol)); % save real part in ppm
+                        nii_vol = make_nii(real(vol)); % save real part in ppm
                     else
-                        nii_vol = make_nii(imrotate(fliplr(real(1e6*vol)), -90)); % save in ppm with a rotation to have a vertical z axis
+                        nii_vol = make_nii(imrotate(fliplr(real(vol)), -90)); % save in ppm with a rotation to have a vertical z axis
                     end
                        
                     %set image resolution in nifti header
