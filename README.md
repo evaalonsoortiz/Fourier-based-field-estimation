@@ -164,7 +164,7 @@ slice(cylindrical_dBz.volume, 64, 64, 64)
 ```
 
 #### 3. Zubal phantom
-
+Important: first add the nifti file containing the modified Zubal phantom to the main folder
 ```
 zubal_sus_dist = Zubal('zubal_modified.nii');
 zubal_dBz = FBFest('Zubal', zubal_sus_dist.volume, zubal_sus_dist.image_res, zubal_sus_dist.matrix);
