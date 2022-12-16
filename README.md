@@ -25,7 +25,11 @@ This equation allows us to simulate the magnetic field perturbation arising from
 
 It should be noted that when $k=0$, the equation is undefined. $k=0$ is the spatial frequency with wavelength equal to zero, and $\tilde B_{dz} (\mathbf{k = 0})$ is otherwise interpreted as the average field. In order to avoid a singularity, one must assign a value to $\tilde B_{dz} (\mathbf{k} = 0)$, and for this, some assumptions must be made. 
 
-### Scenario 1: Sphere in an infinite medium:
+### Setting the value of $\tilde B_{dz} (\mathbf{k} = 0)$ when the average magnetic field does not equal zero
+
+In order to determine the appropriate value to assign to  $\tilde B_{dz} (\mathbf{k} = 0)$ we can consider two scenarios. 
+
+#### Scenario 1: Sphere in an infinite medium
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/112189990/194596500-c4b6450d-8d6e-41f8-a768-fbed345f261e.png" width="200" height="230">
@@ -38,7 +42,7 @@ The derivation for the analytical solution of the magnetic field arising from a 
 
 From this the average field value can be derived. For $r >> a$ , we can see that both the internal and external field will go to a value of $\frac{1}{3} \chi_e B_0$. $\tilde B_{dz} (\mathbf{k} = 0)$ can be set to $\frac{1}{3} \chi_e B_0$.
 
-### Scenario 2: Infinitely long cylinder in an infinite medium
+#### Scenario 2: Infinitely long cylinder in an infinite medium
 <p align="center">
 <img src="https://user-images.githubusercontent.com/112189990/194596320-76b668d3-5dbd-42f7-881e-e43b82f3653c.png" width="200" height="230">
 </p>
@@ -50,38 +54,29 @@ The derivation for the analytical solution of the magnetic field arising from an
 
 where $\theta$ is the angle between the direction of the main magnetic field and the central axis of the cylinder.
 
-If $r>>a$ and $\theta = 0$ (cylinder axis parallel to $B_0$), then the internal and external field again go to a value of $\frac{1}{3} \chi_e B_0$. 
+If $r>>a$, then the external field again goes to a value of $\frac{1}{3} \chi_e B_0$. Based on this, we can assume that  $\tilde B_{dz} (\mathbf{k} = 0) = \frac{1}{3} \chi_e B_0$.
 
-### Assumptions :
+### Setting the value of $\tilde B_{dz} (\mathbf{k} = 0)$ when the average magnetic field is equal to zero (i.e., a "demodulated" field)
 
-$$ \tilde B_{dz} (\mathbf{k}) = \tilde \chi (\mathbf{k}) \cdot B_0 \bigg (\frac{1}{3} - \frac{k_z^2}{|\mathbf{k}|^2} \bigg) $$
-
-with 
-
-$$ \tilde B_{dz} (\mathbf{k = 0}) = \frac{1}{3} \chi_e B_0 $$
-
-However, we often only know the susceptibility difference and not the individual $\chi_i$ and $\chi_e$ values. The calculations of the field can then still be done, assuming that we only want to know the frequency demodulated field in ppm. This is the same as what we measure in an MRI scan, and can be recognized by the field going to 0 ppm far away from the object. With this assumption, the resulting field only depends on the susceptibility difference $\chi_i - \chi_e$. We then use the susceptibility difference map (right) instead of the susceptibility distribution map (left).
+Signals arising from an MRI scanner will be "demodulated". A consequence of this is that the average magnetic field within a measured field map is set to zero (here we call this a demodulated field) and any deviation from zero is due to susceptibility differences. 
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/112189990/206759060-6093c10d-b072-41ee-beb1-2eae9d184932.png" width="400" height="200">
 </p>
 
-Because the calculations are done in ppm (parts per million), the field also doesn't depend on the strength of the $B_0$ field. The equations for the frequency demodulated field ($\tilde B_{dz-demod} (\mathbf{k})) in ppm then reduce to the following: 
+In order to simulate this scenario, we can assume that $\tilde B_{dz} (\mathbf{k} = 0) = 0$. If the susceptibility differences between materials is known, then the demodulated field ( $\tilde B_{dz-demod} (\mathbf{k})$ ) can be computed as follows:
 
-$$ \tilde B_{dz-demod}[ppm] (\mathbf{k}) = \tilde \Delta\chi (\mathbf{k}) \bigg (\frac{1}{3} - \frac{k_z^2}{|\mathbf{k}|^2} \bigg) \cdot 1e6 $$
+$$ \tilde B_{dz-demod} (\mathbf{k}) =  \Delta \tilde \chi (\mathbf{k}) \cdot B_0 \bigg (\frac{1}{3} - \frac{k_z^2}{|\mathbf{k}|^2} \bigg) $$
 
-with 
-
-$$ \tilde B_{dz-demod}[ppm] (\mathbf{k = 0}) = \frac{1}{3} \cdot 0 \cdot B_0 \cdot 1e6 = 0 $$
 
 These final equations are the ones used in **FBFest**, which calculates the magnetic field offset produced by a susceptibility distribution subject to a uniform external magnetic field $B_0$ (oriented along the z-axis).
 
-## Usage :
+## Usage 
 
 ### Test script
-Run the test script from the main folder (the folder containing FBFest), after adding the folder utils, test_scripts and external to the path.
+Run the test script from the main folder (the folder containing FBFest), after adding it to the path.
 
-A test script **test_calc_bdz** was developed for easy use of the FBFest function when testing with a spherical or cylindrical phantom. This test script allows a comparison to the analytical solutions for the sphere and cylinder, for which the equations are given in the theory. These equations are also adapted to give the solution for the frequency demodulated field in ppm, so they only depend on the susceptibility difference and don't depend on the field strength of $B_0$. 
+A test script **test_calc_bdz** was developed for easy use of the FBFest function when testing with a spherical or cylindrical phantom. This test script allows a comparison to the analytical solutions for the sphere and cylinder, for which the equations are given in the theory. These equations are also adapted to give the solution for the demodulated field in ppm, so they only depend on the susceptibility difference and don't depend on the field strength of $B_0$. 
 
 Three flags in the beginning of the test script give the user some choices for the simulation. 
 - **phantom**: the choice between "sphere" or "cylinder"
@@ -95,7 +90,7 @@ To create the susceptibility distributions, some parameters have to be set:
 - **theta** (only for cylinder): angle of rotation of the cylinder axis around y-axis [rad]
 -   - theta = 0: cylinder axis parallel to z-axis and $B_0$
     - theta = $\pi/2$: cylinder axis perpendicular to z-axis and $B_0$
-- **phi** (only for cylinder): angle between x-axis and measurement axis in the xy plane [rad], default values for phi are set and should not be changed:
+- **phi** (only for cylinder): angle between x-axis and the projection of the cylinder axis in the xy plane [rad], default values for phi are set and should not be changed:
     - phi_x = 0 (measurement along x-axis)
     - phi_y = $\pi/2$ (measurement along y-axis)
 - **susin**: value of $\chi_i$ [ppm], only use this when you want to calculate the field offset
@@ -114,7 +109,7 @@ The susceptibility distribution is then made using the ChiDist subclasses:
 <br/>
 
 ### From command line
-Run the following commands from the main folder (the folder containing FBFest), after adding the folder utils to the path.
+Run the following commands from the main folder (the folder containing FBFest), after adding it to your path.
 
 #### 1. Spherical phantom
 ```
