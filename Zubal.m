@@ -14,10 +14,10 @@
           % susceptibility of muscle is from https://www.researchgate.net/figure/Magnetic-susceptibility-of-different-matter_tbl1_288160127
           % susceptibility of venous and arterial blood from https://www.researchgate.net/figure/Magnetic-susceptibility-of-different-matter_tbl1_288160127
           % susceptibility of cartilage is from https://onlinelibrary.wiley.com/doi/pdf/10.1002/mrm.26596
-          sus = struct('sinus',0.2e-6,'teeth',-12.3e-6,'bone',-11.1e-6,'thalamus',-9.02e-6, ...
-              'caudate_nucleus',-8.99e-6,'putamen',-8.96e-6,'globus_pallidus',-8.89e-6,'GM',-9.03e-6,'WM',-9.0830e-6,'CSF',-9.05e-6,...
-              'air',0.35e-6,'water',-9.05e-6,'fat',-8.39e-6,'muscle',-9.03e-6,'venous_blood',-7.8e-6,'arterial_blood',-9.3e-6,...
-              'cartilage',-9.055e-6);
+          sus = struct('sinus',0.2,'teeth',-12.3,'bone',-11.1,'thalamus',-9.02, ...
+              'caudate_nucleus',-8.99,'putamen',-8.96,'globus_pallidus',-8.89,'GM',-9.03,'WM',-9.0830,'CSF',-9.05,...
+              'air',0.35,'water',-9.05,'fat',-8.39,'muscle',-9.03,'venous_blood',-7.8,'arterial_blood',-9.3,...
+              'cartilage',-9.055);
           
           % - Call superclass constructor.
           obj = obj@ChiDist( [256 256 128] ,[1.1 1.1 1.4], sus, 'Zubal') ;
@@ -57,7 +57,7 @@
               'lateral_ventricles',obj.sus.CSF,'prefrontal_lobes',obj.sus.GM,'teeth',obj.sus.teeth,'sigmoid_sinus',obj.sus.venous_blood);
 
           % create suscceptibility phantom
-          obj.volume = zubal_phantom;
+          obj.volume = zubal_phantom * 1e6;
           
           obj.volume(zubal_phantom==zubal_id.outside_phantom) = zubal_sus.outside_phantom;
           obj.volume(zubal_phantom==zubal_id.skin) = zubal_sus.skin;
