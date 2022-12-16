@@ -1,30 +1,29 @@
 
-## Theory :
+## Theory 
 
-Fourier-based field estimation is a Matlab toolbox to estimate magnetic field inhomogeneity due to spatial variation of magnetic susceptibility. 
+The "Fourier-based field estimation" code allows one to estimate the magnetic field perturbation that arises when an object is placed within a magnetic field.
 
-In MRI it is assumed that the $B_0$ field is uniform, but due to differences in susceptibility in the body, the field will be non-uniform which creates artefacts. To compensate for the effect of the inhomogeneities in the field, shimming coils are installed in the scanner. To achieve the best possible correction with these coils, an accurate map of the magnetic field has to be obtained. That is exactly what this simulation does.
+When an object is placed within an MRI scanner, it is assumed that the magnetic field experienced by the object is uniform and equal to the applied ( $B_0$ ) field. However, magnetic susceptibility ( $\chi$ ) differences between tissues in the body will lead to a non-uniform magnetic field within the body. This inhomogeneous magnetic field will cause image artefacts. These artefacts can be corrected for, if the magnetic field distribution is known. For this, an accurate map of the magnetic field must be acquired. This code allows the user to simulate magnetic fields, which can be useful for validating acquired field maps. 
 
-The derivation of the magnetic field equation is based on a Fourier transform of the susceptibility distribution and a Fourier transform of the point-dipole field. Only the z-component of the magnetic field $B_{dz}$ is important in the case of an external field $B_0$ in the z-direction. The derivation of the following equation for the FT of the magnetic field $\tilde B_{dz}$ is explained in ([Marques et al.](https://onlinelibrary.wiley.com/doi/10.1002/cmr.b.20034)).
+In MRI, the $B_0$ field is aligned along the z-axis. When an object is placed within this field, it will become magnetized and only the z-component of the induced magnetization will be significant. The Fourier transform of z-component of the induced magnetic field can be expressed as follows (see [Marques et al.](https://onlinelibrary.wiley.com/doi/10.1002/cmr.b.20034) for a full derivation of this expression):
 
-$$ \tilde B_{dz} (\mathbf{k}) = \tilde M_{z} (\mathbf{k}) \cdot \mu_0 \bigg (\frac{1}{3} - \frac{k_z^2}{|\mathbf{k}|^2} \bigg) $$
+$$ \tilde B_{dz} (\mathbf{k}) = \tilde M_{z} (\mathbf{k}) \cdot \mu_0 \bigg (\frac{1}{3} - \frac{k_z^2}{|\mathbf{k}|^2} \bigg) $$ 
 
+where the spatial frequency, $k$ is equal to $|k|^2=k_x^2+k_y^2+k_z^2$, $\mu_0$ is the permeability of free space, and $M_z$ is the induced magnetization along the z-axis and equal to:
 
-With:
+$$ M_{z} (\mathbf{r}) = \chi(\mathbf{r}) \frac{B_0}{\mu_0 (1 + \chi(\mathbf{r}))} $$ 
 
-$$ |k|^2 = k_x^2 + k_y^2 + k_z^2 $$
+If $\chi << 1 $, then we can approximate $M_{z} (\mathbf{r})$ as:
 
-If it is assumed that the susceptibility $\chi << 1 $, then an approximation for $M_{z} (\mathbf{r})$ can be made:
-
-$$ M_{z} (\mathbf{r}) = \chi(\mathbf{r}) \frac{B_0}{\mu_0 (1 + \chi(\mathbf{r}))} \approx \chi(\mathbf{r}) \frac{B_0}{\mu_0} $$
+$$ M_{z} (\mathbf{r}) \approx \chi(\mathbf{r}) \frac{B_0}{\mu_0} $$
 
 The first equation can then be rewritten as:
 
 $$ \tilde B_{dz} (\mathbf{k}) = \tilde \chi (\mathbf{k}) \cdot B_0 \bigg (\frac{1}{3} - \frac{k_z^2}{|\mathbf{k}|^2} \bigg) $$
 
-For the zero frequency, $k=0$, this equation is undefined. The value for the zero frequency should be equal to the average field, for which some assumptions have to be made. In this toolbox the assumption is made that we are dealing with one of the following situations:
-- a sphere with radius $a$ and susceptibility $\chi_i$ in an infinite medium of susceptibility $\chi_e$
-- an infinitely long cylinder with the main axis parallel to $B_0$, radius $a$ and susceptibility $\chi_i$ in an infinite medium of susceptibility $\chi_e$
+This equation allows us to simulate the magnetic field perturbation arising from a susceptibility distribution $\chi(r)$ when introduced within $B_0$. 
+
+It should be noted that when $k=0$, the equation is undefined. $k=0$ is the spatial frequency with wavelength equal to zero, and $\tilde B_{dz} (\mathbf{k = 0})$ is otherwise interpreted as the average field. In order to avoid a singularity, one must assign a value to $\tilde B_{dz} (\mathbf{k = 0})$, and for this, some assumptions must be made. 
 
 ### Sphere in an infinite medium:
 
